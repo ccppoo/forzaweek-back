@@ -1,0 +1,13 @@
+tracks:
+
+  - name: Fastival Drag Strip
+    type: drag racing
+    course_type: drag racing
+  
+  - name: Aeródromo Drag Strip
+    type: drag racing
+    course_type: drag racing
+  
+  - name: Teotihuacán Drag Strip
+    type: drag racing
+    course_type: drag racing

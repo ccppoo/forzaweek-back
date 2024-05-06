@@ -1,0 +1,47 @@
+A:
+  - car: Alpine A110 '17
+    drive-train: awd
+    creator: SepiSP4
+    share_code: '312985290'
+    tags:
+      track:
+        - dirt
+      tuning:
+        - all around
+        - grip
+
+  - car: Acura Integra
+    drive-train: fwd
+    creator: SepiSP4
+    share_code: '156430929'
+    tags:
+      track:
+        - road
+      tuning:
+        - all around
+
+  - car: Corvette C8 '20
+    drive-train: awd
+    creator: SepiSP4
+    share_code: '750032554'
+    tags:
+      track:
+        - road
+      tuning:
+        - all around
+        - grip
+
+  - car: Toyota Supra '98
+    drive-train: rwd
+    creator: SepiSP4
+    share_code: '824282888'
+    tags:
+      track:
+        - road
+      tuning:
+        - all around
+        - wide body
+
+        
+
+  

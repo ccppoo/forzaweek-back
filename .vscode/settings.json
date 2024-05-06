@@ -1,0 +1,11 @@
+{
+  "[python]": {
+    "editor.tabSize": 4,
+    "editor.defaultFormatter": "ms-python.black-formatter",
+    "editor.formatOnSave": true
+  }, 
+  "editor.tabSize": 4,
+  "python.REPL.enableREPLSmartSend": false,
+  
+
+}
