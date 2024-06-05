@@ -30,6 +30,7 @@ app.add_middleware(
 # app.add_middleware(AuthenticationMiddleware, backend=BasicAuthBackend())
 
 app.include_router(devRouter)
+app.include_router(imageRouter)
 
 
 @app.get("/")

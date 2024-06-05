@@ -3,10 +3,28 @@ from pydantic_settings import BaseSettings, SettingsConfigDict
 from argparser import args
 import urllib.parse
 
-__all__ = ("dbSettings", "securitySettings", "redisSettings", "oauthSettings")
+__all__ = (
+    "dbSettings",
+    "securitySettings",
+    "redisSettings",
+    "oauthSettings",
+    "awsSettings",
+)
 
 ENV_FILE = f"./envs/.{args.mode}.env"
 ENV_FILE = f"./envs/.dev.env"
+
+
+class _AWS_S3_Settings(BaseSettings):
+    REGION: str
+    BUCKET: str
+    CREDENTIALS_ACCESS_KEY: str
+    CREDENTIALS_SECRET_KEY: str
+
+    ## Pydantic V2
+    model_config = SettingsConfigDict(
+        env_file=ENV_FILE, env_file_encoding="utf-8", extra="ignore", env_prefix="AWS_"
+    )
 
 
 class _DatabaseSettings(BaseSettings):
@@ -103,3 +121,4 @@ dbSettings = _DatabaseSettings()
 securitySettings = _SecuritySettings()
 redisSettings = _RedisSettings()
 oauthSettings = _OAuthSettings()
+awsSettings = _AWS_S3_Settings()
