@@ -9,6 +9,7 @@ tiled/
 /ssl
 *.pem
 /envs
+envs/
 /uploads
 
 # Byte-compiled / optimized / DLL files
@@ -165,3 +166,4 @@ cython_debug/
 #.idea/
 
 /envs
+*.env
