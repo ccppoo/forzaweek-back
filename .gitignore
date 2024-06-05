@@ -2,6 +2,9 @@
 Horizon5MapFullRes.jpg
 Horizon5MapFullRes.png
 
+# etc
+tiled/
+
 # local test
 /ssl/*.pem
 
