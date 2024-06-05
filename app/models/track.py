@@ -6,22 +6,26 @@ from typing import Annotated, Any, Optional
 from beanie import Document, Link
 from pydantic import BaseModel, Field
 from typing import Literal, List
-import pymongo
-from .car import Car
-from .car_stat import CarStat
-from .tag import Tag, TrackTag
-from .i18n import i18n, Locale
+from .tag import Tag
+from .i18n import i18n
+from .track_trait import TrackType, CourseType
 
-__all__ = ("Track",)
+__all__ = ("Track", "dbInit")
+
+
+class TrackName(i18n):
+    # value : str
+    # lang: str
+    translated: str
 
 
 class Track(Document):
     """Track DB representation."""
 
-    name: i18n
-    type: i18n
-    course_type: i18n
-    tag: List[Link[TrackTag]] = Field(default=[])
+    name: TrackName
+    track: TrackType
+    course: CourseType
+    tag: List[Link[Tag]] = Field(default=[])
 
     @property
     def created(self) -> datetime | None:
@@ -30,3 +34,6 @@ class Track(Document):
 
     class Settings:
         name = "track"
+
+
+dbInit = (Track, TrackName)

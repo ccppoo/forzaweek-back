@@ -2,17 +2,17 @@ from beanie import Document, Indexed
 from pydantic import BaseModel, Field
 from typing import List, Optional
 
-__all__ = ["Tag", "CarTag", "TrackTag", "TuningTag", "DifficultyTag"]
+__all__ = ("i18n", "dbInit")
 
 ISO_639 = ["en", "ko"]
 
 
-class Locale(BaseModel):
+class i18n(Document):
     value: str
-    alias: List[str] = Field(default=[])
+    lang: str
+
+    class Settings:
+        is_root = True
 
 
-class i18n(BaseModel):
-    value: str
-    alias: List[str] = Field(default=[])
-    ko: Optional[Locale]
+dbInit = [i18n]

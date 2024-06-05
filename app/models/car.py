@@ -3,14 +3,13 @@
 from datetime import datetime
 from typing import Annotated, Any, Optional
 
-from beanie import Document, Indexed
+from beanie import Document, Indexed, Link
 from pydantic import BaseModel, EmailStr, Field
 from typing import Literal
-from .car_stat import CarStat
-import pymongo
+from .manufacturer import Manufacturer
 
 
-__all__ = ("Car",)
+__all__ = ("Car", "dbInit")
 
 PI_RANKS = ["D", "C", "B", "A", "S1", "S2", "X"]
 RARITY_LITERAL = [
@@ -28,22 +27,12 @@ class Car(Document):
 
     name: str
     model: str
-    manufacturer: str
+    manufacturer: Link[Manufacturer]
     year: int
-    type: str
-    rarity: int
-    country: str
-    value: int
-    stat: CarStat
-
-    @property
-    def rarity_str(
-        self,
-    ) -> Literal[
-        "Common", "Rare", "Epic", "Legendary", "Forza Edition", "Anniversary Edition"
-    ]:
-        """string rarity in string"""
-        return RARITY_LITERAL[self.rarity - 1]
+    driveTrain: str
+    engine: str = Field(default="")
+    door: int = Field(default=0)
+    bodyStyle: str = Field(default="")
 
     @property
     def created(self) -> datetime | None:
@@ -51,4 +40,7 @@ class Car(Document):
         return self.id.generation_time if self.id else None
 
     class Settings:
-        name = "cars"
+        name = "car"
+
+
+dbInit = (Car,)

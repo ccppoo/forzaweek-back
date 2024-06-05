@@ -1,8 +1,24 @@
-from .car import *
-from .tag import *
-from .tuning import *
-from .track import Track
+from .car import dbInit as carDBInit
+from .i18n import dbInit as i18nDBInit
+from .manufacturer import dbInit as manufacturerDBInit
+from .nation import dbInit as nationDBInit
+from .stat import dbInit as statDBInit
+from .tag import dbInit as tagDBInit
+from .tuning import dbInit as tuningDBInit
+from .track import dbInit as trackDBInit
+from .tuning import dbInit as tuningDBInit
 
 __all__ = ["models"]
 
-models = [Car, Tag, CarTag, TrackTag, TuningTag, DifficultyTag, Tuning, Track]
+
+models = [
+    *i18nDBInit,
+    *nationDBInit,
+    *manufacturerDBInit,
+    *carDBInit,
+    *statDBInit,
+    *tagDBInit,
+    *tuningDBInit,
+    *trackDBInit,
+    *tuningDBInit,
+]
