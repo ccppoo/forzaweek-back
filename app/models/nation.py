@@ -29,6 +29,17 @@ class Nation(Document):
         """Datetime car was created from ID."""
         return self.id.generation_time if self.id else None
 
+    def to_json(self, lang: Optional[str]) -> dict[str, Any]:
+        if lang:
+            for nationName in self.name:
+                if nationName.lang == lang:
+                    return nationName.model_dump(exclude=["id", "revision_id"])
+        data = []
+        for nationName in self.name:
+            nationName: NationName
+            data.append(nationName.model_dump(exclude=["id", "revision_id"]))
+        return data
+
     class Settings:
         name = "nation"
 
