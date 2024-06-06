@@ -7,7 +7,7 @@ from app.models import models
 
 
 async def start_up_db(app: FastAPI):
-    app.db = AsyncIOMotorClient(dbSettings.URL).account
+    app.db = AsyncIOMotorClient(dbSettings.URL)[dbSettings.DATABASE]
     await init_beanie(app.db, document_models=models)
 
 

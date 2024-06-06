@@ -7,6 +7,9 @@ from .tag import dbInit as tagDBInit
 from .tuning import dbInit as tuningDBInit
 from .track import dbInit as trackDBInit
 from .tuning import dbInit as tuningDBInit
+from .bodyStyle import dbInit as bodyStyleDBInit
+from .driveTrain import dbInit as driveTrainDBInit
+from .engine import dbInit as engineDBInit
 
 __all__ = ["models"]
 
@@ -15,6 +18,9 @@ models = [
     *i18nDBInit,
     *nationDBInit,
     *manufacturerDBInit,
+    *bodyStyleDBInit,
+    *driveTrainDBInit,
+    *engineDBInit,
     *carDBInit,
     *statDBInit,
     *tagDBInit,
