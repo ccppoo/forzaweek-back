@@ -4,6 +4,7 @@ from argparser import args
 import urllib.parse
 
 __all__ = (
+    "runtimeSettings",
     "dbSettings",
     "securitySettings",
     "redisSettings",
@@ -13,6 +14,17 @@ __all__ = (
 
 ENV_FILE = f"./envs/.{args.mode}.env"
 ENV_FILE = f"./envs/.dev.env"
+
+
+class _RuntimeSettings(BaseSettings):
+    TEMPFILE_BASE_DIR: str
+
+    model_config = SettingsConfigDict(
+        env_file=ENV_FILE,
+        env_file_encoding="utf-8",
+        extra="ignore",
+        env_prefix="SYSTEM_",
+    )
 
 
 class _AWS_S3_Settings(BaseSettings):
@@ -122,3 +134,5 @@ securitySettings = _SecuritySettings()
 redisSettings = _RedisSettings()
 oauthSettings = _OAuthSettings()
 awsSettings = _AWS_S3_Settings()
+
+runtimeSettings = _RuntimeSettings()
