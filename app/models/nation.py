@@ -4,13 +4,20 @@ from datetime import datetime
 from typing import Annotated, Any, Optional
 
 from beanie import Document, Indexed, Link
-from pydantic import BaseModel, EmailStr, Field
+from pydantic import BaseModel, EmailStr, Field, HttpUrl, TypeAdapter, BeforeValidator
 from typing import Literal, List
 import pymongo
 from .i18n import i18n
 
 
 __all__ = ("Nation", "dbInit")
+
+
+http_url_adapter = TypeAdapter(HttpUrl)
+
+Url = Annotated[
+    str, BeforeValidator(lambda value: str(http_url_adapter.validate_python(value)))
+]
 
 
 class NationName(i18n):
@@ -23,6 +30,8 @@ class Nation(Document):
     """Nation DB representation."""
 
     name: List[Link[NationName]]
+    name_en: str
+    imageURL: Url
 
     @property
     def created(self) -> datetime | None:
