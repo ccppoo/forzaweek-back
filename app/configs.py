@@ -27,6 +27,21 @@ class _RuntimeSettings(BaseSettings):
     )
 
 
+class _CF_R2_Settings(BaseSettings):
+
+    ACCESS_KEY: str
+    SECRET_ACCESS_KEY: str
+    TOKEN: str
+    R2_ENDPOINT: str
+    LOCATION: str
+    BUCKET: str
+
+    ## Pydantic V2
+    model_config = SettingsConfigDict(
+        env_file=ENV_FILE, env_file_encoding="utf-8", extra="ignore", env_prefix="CF_"
+    )
+
+
 class _AWS_S3_Settings(BaseSettings):
     REGION: str
     BUCKET: str
@@ -136,3 +151,4 @@ oauthSettings = _OAuthSettings()
 awsSettings = _AWS_S3_Settings()
 
 runtimeSettings = _RuntimeSettings()
+cfSettings = _CF_R2_Settings()
