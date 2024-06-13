@@ -23,7 +23,8 @@ Url = Annotated[
 class NationName(i18n):
     # value : str
     # lang: str
-    pass
+    def to_front(self):
+        return {"value": self.value, "lang": self.lang}
 
 
 class Nation(Document):
@@ -49,8 +50,21 @@ class Nation(Document):
             data.append(nationName.model_dump(exclude=["id", "revision_id"]))
         return data
 
+    def to_json_all_lang(self) -> dict[str, Any]:
+        i18ns = [x.to_front() for x in self.name]
+        # 직접 id 가져오는 방법?
+        _id = self.model_dump(include=["id"])["id"]
+
+        return {
+            "id": _id,
+            "i18n": i18ns,
+            "name_en": self.name_en,
+            "imageURL": self.imageURL,
+        }
+
     class Settings:
         name = "nation"
+        use_state_management = True
 
 
 dbInit = (Nation, NationName)

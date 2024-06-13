@@ -11,7 +11,7 @@ from datetime import datetime
 import uuid
 from app.configs import awsSettings, runtimeSettings, cfSettings
 from app.models.nation import Nation as NationDB, NationName
-from beanie import WriteRules
+from beanie import WriteRules, DeleteRules
 import botocore
 import urllib
 from fastapi import FastAPI, File, UploadFile
@@ -30,18 +30,25 @@ class NationGet(BaseModel):
 
 class NationCreate(BaseModel):
 
-    name: List[NationName]
+    i18n: List[NationName]
     name_en: str
-    image: str
+    imageURL: str
 
 
-client_s3 = boto3.client(
-    "s3",
-    awsSettings.REGION,
-    aws_access_key_id=awsSettings.CREDENTIALS_ACCESS_KEY,
-    aws_secret_access_key=awsSettings.CREDENTIALS_SECRET_KEY,
-)
+class NationEdit(BaseModel):
+    id: str
+    i18n: List[NationName]
+    name_en: str
+    imageURL: str
 
+
+# client_s3 = boto3.client(
+#     "s3",
+#     awsSettings.REGION,
+#     aws_access_key_id=awsSettings.CREDENTIALS_ACCESS_KEY,
+#     aws_secret_access_key=awsSettings.CREDENTIALS_SECRET_KEY,
+# )
+# aws_temp = "https://forzaweek-image-main-storage.s3.ap-northeast-2.amazonaws.com/{folder}/{name}"
 
 client_r2 = boto3.client(
     service_name="s3",
@@ -53,30 +60,29 @@ client_r2 = boto3.client(
 
 
 @router.get("")
-async def get_nation(nation: NationGet):
+async def get_all_nation():
 
-    nationDB = await NationDB.find_one(
-        NationDB.name.value == nation.name, fetch_links=True
-    )
+    nationDBs = await NationDB.find_all().to_list()
+    [await nDB.fetch_all_links() for nDB in nationDBs]
 
-    if nationDB:
-        return nationDB.to_json(nation.lang)
-        # return nationDB.model_dump(exclude=["id", "revision_id"])
+    a = [x.to_json_all_lang() for x in nationDBs]
+    return a
 
-    return "hello"
+
+@router.delete("/{itemID}")
+async def delete_nation(itemID: str):
+    nation: NationDB = await NationDB.get(itemID, fetch_links=True)
+    if not nation:
+        return
+    await nation.delete(link_rule=DeleteRules.DELETE_LINKS)
+    return 200
 
 
 @router.post("")
 async def add_nation(nation: NationCreate):
-    # NationName.lang
 
-    pprint(nation)
-
-    aws_temp = "https://forzaweek-image-main-storage.s3.ap-northeast-2.amazonaws.com/{folder}/{name}"
     cf_temp = "https://fzwcdn.forzaweek.com/{folder}/{name}"
     nat = await NationDB.find_one(NationDB.name_en == nation.name_en)
-
-    pprint(nat)
 
     if nat:
         # 중복됨
@@ -85,7 +91,7 @@ async def add_nation(nation: NationCreate):
     # 1. 이미지 R2로 보내기
     base_dir = runtimeSettings.TEMPFILE_BASE_DIR
 
-    fname_temp = pathlib.Path(base_dir, "uploads", "nation", nation.image).resolve()
+    fname_temp = pathlib.Path(base_dir, "uploads", "nation", nation.imageURL).resolve()
     if not fname_temp.exists():
         # TODO: 업로드된 이미지 다시 요청
         return 403
@@ -99,13 +105,14 @@ async def add_nation(nation: NationCreate):
         Filename=fname_temp,
         Bucket=cfSettings.BUCKET,
         Key=new_key,
+        ExtraArgs={"ContentType": "image/svg+xml"},
     )
 
     # 임시 파일 삭제
     os.remove(fname_temp)
 
     # 2. DB에 저장
-    inserted_i18n = [await nname.insert() for nname in nation.name]
+    inserted_i18n = [await nname.insert() for nname in nation.i18n]
 
     nation_inserted = await NationDB(
         name=inserted_i18n,
@@ -113,13 +120,92 @@ async def add_nation(nation: NationCreate):
         imageURL=cf_temp.format(folder=folder, name=new_filename),
     ).insert()
 
-    pprint(nation_inserted)
+    # pprint(nation_inserted)
+
+    return 200
+
+
+@router.get("/edit/{itemID}")
+async def get_nation_for_edit(itemID: str):
+    nationDB = await NationDB.get(itemID, fetch_links=True)
+
+    if not nationDB:
+        return
+
+    return nationDB.to_json_all_lang()
+
+
+@router.post("/edit/{itemID}")
+async def update_nation(itemID: str, nation: NationEdit):
+    assert itemID == nation.id
+
+    NAME_EN = nation.name_en.replace(" ", "_")
+    NEW_IMAGE = not nation.imageURL.startswith("https")  # blob:// ...
+
+    nat_old = await NationDB.get(nation.id, fetch_links=True)
+
+    if not nat_old:
+        return 403
+
+    # 1. 임시 이미지 R2로 보내기
+    # NOTE: 이미지 수정 안했을 경우 기존 이미지 URL인 `https~`이므로 수정하지 않는다.
+    if NEW_IMAGE:
+        base_dir = runtimeSettings.TEMPFILE_BASE_DIR
+
+        fname_temp = pathlib.Path(
+            base_dir, "uploads", "nation", nation.imageURL
+        ).resolve()
+        if not fname_temp.exists():
+            # TODO: 업로드된 이미지 다시 요청
+            return 403
+
+        # 업로드할 이미지 이름 재수정
+        new_filename = f"{NAME_EN}_flag{fname_temp.suffix}"
+        folder = "nation"
+        new_key = f"{folder}/{new_filename}"
+
+        # 이전에 있던 이미지 삭제
+        # nat_old.imageURL
+
+        # 기존 버켓에 있던 이미지는 이름 그대로, 바뀜
+        client_r2.upload_file(
+            Filename=fname_temp,
+            Bucket=cfSettings.BUCKET,
+            Key=new_key,
+            ExtraArgs={"ContentType": "image/svg+xml"},
+        )
+
+        # 임시 파일 삭제
+        os.remove(fname_temp)
+
+    # 이름 변경 있을 경우에만 새로 저장
+    names: List[NationName] = NationName.RIGHT_JOIN(
+        left=nat_old.name, right=nation.i18n
+    )
+    # print("새로 저장할 거")
+    # print(names)
+    old_names: List[NationName] = NationName.LEFT_ONLY(
+        left=nat_old.name, right=nation.i18n
+    )
+    # print("삭제할 거")
+    # print(old_names)
+    # 새로운건 저장
+    [await n.insert() if not n.id else None for n in names]
+    # 2. DB에 저장
+    nat_old.name = names
+    nat_old.name_en = NAME_EN
+
+    # NOTE: 이미지의 경우 이름은 그대로, 버킷에 있는 파일만 바뀌므로 업데이트 안함
+    await nat_old.save_changes()
+
+    # 안쓰는 i18n 삭제
+    [await name.delete() for name in old_names]
 
     return 200
 
 
 @router.post("/image")
-async def add_nation(file: UploadFile):
+async def add_nation_flag(file: UploadFile):
     # TODO: 파일 업로드하고 사용 안된 임시파일 삭제하기
 
     # 내용 추가 중에 이미지 추가할 때 임시로 저장하는 것

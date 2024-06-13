@@ -23,7 +23,7 @@ app.add_middleware(
     CORSMiddleware,
     allow_origins=origins,
     allow_credentials=True,
-    allow_methods=["POST", "PUT", "GET", "OPTIONS", "HEAD"],
+    allow_methods=["POST", "PUT", "GET", "OPTIONS", "HEAD", "DELETE"],
     allow_headers=["*"],
 )
 
@@ -34,6 +34,7 @@ app.include_router(imageRouter)
 app.include_router(nationRouter)
 app.include_router(manufacturerRouter)
 app.include_router(carRouter)
+app.include_router(dataRouter)
 
 
 @app.get("/")
