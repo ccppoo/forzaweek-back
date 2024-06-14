@@ -12,10 +12,12 @@ import json
 from pprint import pprint
 from datetime import datetime
 import boto3
+from app.configs import awsSettings, runtimeSettings, cfSettings
+import uuid
 
-from app.configs import awsSettings
 import botocore
 import urllib
+import pathlib
 
 
 router = APIRouter(prefix="/image", tags=["image"])
@@ -34,31 +36,27 @@ class ImageURLRequest(BaseModel):
     images: List[str]
 
 
-@router.get("")
-async def get_image():
-    return "hello"
+@router.post("/{folder}")
+async def add_nation_flag(folder: str, file: UploadFile):
+    # TODO: 파일 업로드하고 사용 안된 임시파일 삭제하기
 
+    temp_image_allow = ["nation", "manufacturer"]
 
-@router.post("")
-async def upload_image(file: UploadFile):
+    requestedImage = await file.read()
 
-    file_path = f"./uploads/{file.filename}"
+    if folder not in temp_image_allow:
+        return 403
 
-    with open(file_path, "wb") as f:
-        f.write(await file.read())
+    fname = pathlib.Path(file.filename)
+    _, file_ext = fname.stem, fname.suffix
 
-    # upload file -> 서버에서 다운 받고, 다시 보내는 방식
-    # upload file object -> 클라이언트가 바이너리로 보낸 스트림을 그대로 다시 받아서 보내는 형식(저장 x)
-    client_s3.upload_file(
-        Filename=file_path,
-        Bucket=awsSettings.BUCKET,
-        Key=file.filename,
-        ExtraArgs={"ContentType": file.content_type},
-    )
+    random_name = uuid.uuid4()
+    temp_file_name = f"{random_name}{file_ext}"
+    base_dir = runtimeSettings.TEMPFILE_BASE_DIR
+    fname_temp = pathlib.Path(base_dir, "uploads", folder, temp_file_name).resolve()
 
-    urllib.parse.quote(file.filename, safe="~()*!.'"),
-    url = (
-        f"https://s3-ap-northeast-2.amazonaws.com/{awsSettings.BUCKET}/{file.filename}"
-    )
+    with open(fname_temp, "wb") as f:
+        f.write(requestedImage)
 
-    return {"filename": url}
+    # 임시 저장한 파일 이름 다시 보내기 (어차피 경로는 POST : /nation으로 오니깐)
+    return {"image": temp_file_name}

@@ -5,11 +5,18 @@ from typing import Annotated, Any, Optional
 
 from beanie import Document, Indexed, Link
 from .nation import Nation
-from pydantic import BaseModel, EmailStr, Field
+from pydantic import BaseModel, EmailStr, Field, HttpUrl, TypeAdapter, BeforeValidator
+
 from typing import Literal, List
 import pymongo
 from .i18n import i18n
 
+
+http_url_adapter = TypeAdapter(HttpUrl)
+
+Url = Annotated[
+    str, BeforeValidator(lambda value: str(http_url_adapter.validate_python(value)))
+]
 
 __all__ = ("Manufacturer", "dbInit")
 
@@ -17,7 +24,8 @@ __all__ = ("Manufacturer", "dbInit")
 class ManufacturerName(i18n):
     # value : str
     # lang: str
-    pass
+    def to_front(self):
+        return {"value": self.value, "lang": self.lang}
 
 
 class ManufacturerDescription(i18n):
@@ -30,39 +38,41 @@ class Manufacturer(Document):
     """Manufacturer DB representation."""
 
     name: List[Link[ManufacturerName]]
+    name_en: str
     founded: int
-    description: List[Link[ManufacturerDescription]]
     origin: Link[Nation]
+    imageURL: Url
 
     @property
     def created(self) -> datetime | None:
         """Datetime car was created from ID."""
         return self.id.generation_time if self.id else None
 
-    def to_json(self, lang: str):
-        _name = ""
-        _descript = ""
-        _nation = ""
-        for name in self.name:
-            if name.lang == lang:
-                _name = name.value
-                break
-        for descript in self.description:
-            if descript.lang == lang:
-                _descript = descript.value
+    def to_json_all_lang(self, _id: bool = False) -> dict[str, Any]:
+        i18ns = [x.to_front() for x in self.name]
+        # 직접 id 가져오는 방법?
+        _id = self.model_dump(include=["id"])["id"]
 
-        for nation_name in self.origin.name:
-            if nation_name.lang == lang:
-                _nation = nation_name.value
+        if _id:
+            return {
+                "id": _id,
+                "i18n": i18ns,
+                "name_en": self.name_en,
+                "origin": self.origin.to_json_all_lang(),
+                "founded": self.founded,
+                "imageURL": self.imageURL,
+            }
         return {
-            "name": _name,
-            "description": _descript,
-            "nation": _nation,
-            "lang": lang,
+            "i18n": i18ns,
+            "name_en": self.name_en,
+            "origin": self.origin,
+            "founded": self.founded,
+            "imageURL": self.imageURL,
         }
 
     class Settings:
         name = "manufacturer"
+        use_state_management = True
 
 
 dbInit = (ManufacturerName, ManufacturerDescription, Manufacturer)

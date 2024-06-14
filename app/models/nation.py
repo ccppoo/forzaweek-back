@@ -50,13 +50,20 @@ class Nation(Document):
             data.append(nationName.model_dump(exclude=["id", "revision_id"]))
         return data
 
-    def to_json_all_lang(self) -> dict[str, Any]:
+    def to_json_all_lang(self, _id: bool = False) -> dict[str, Any]:
         i18ns = [x.to_front() for x in self.name]
         # 직접 id 가져오는 방법?
         _id = self.model_dump(include=["id"])["id"]
 
+        if _id:
+
+            return {
+                "id": _id,
+                "i18n": i18ns,
+                "name_en": self.name_en,
+                "imageURL": self.imageURL,
+            }
         return {
-            "id": _id,
             "i18n": i18ns,
             "name_en": self.name_en,
             "imageURL": self.imageURL,
