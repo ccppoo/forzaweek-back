@@ -101,11 +101,17 @@ async def add_nation(nation: NationCreate):
     folder = "nation"
     new_key = f"{folder}/{new_filename}"
 
+    CONTENT_TYPE = None
+    if fname_temp.suffix.endswith("svg"):
+        CONTENT_TYPE = "svg+xml"
+    if fname_temp.suffix.endswith("webp"):
+        CONTENT_TYPE = "webp"
+
     client_r2.upload_file(
         Filename=fname_temp,
         Bucket=cfSettings.BUCKET,
         Key=new_key,
-        ExtraArgs={"ContentType": "image/svg+xml"},
+        ExtraArgs={"ContentType": f"image/{CONTENT_TYPE}"},
     )
 
     # 임시 파일 삭제
@@ -166,13 +172,17 @@ async def update_nation(itemID: str, nation: NationEdit):
 
         # 이전에 있던 이미지 삭제
         # nat_old.imageURL
-
+        CONTENT_TYPE = None
+        if fname_temp.suffix.endswith("svg"):
+            CONTENT_TYPE = "svg+xml"
+        if fname_temp.suffix.endswith("webp"):
+            CONTENT_TYPE = "webp"
         # 기존 버켓에 있던 이미지는 이름 그대로, 바뀜
         client_r2.upload_file(
             Filename=fname_temp,
             Bucket=cfSettings.BUCKET,
             Key=new_key,
-            ExtraArgs={"ContentType": "image/svg+xml"},
+            ExtraArgs={"ContentType": f"image/{CONTENT_TYPE}"},
         )
 
         # 임시 파일 삭제

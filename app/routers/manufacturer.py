@@ -112,6 +112,8 @@ async def add_manufacturer(manufacturer: ManufacturerCreate):
     new_key = f"{folder}/{new_filename}"
 
     CONTENT_TYPE = None
+    if fname_temp.suffix.endswith("svg"):
+        CONTENT_TYPE = "svg+xml"
     if fname_temp.suffix.endswith("webp"):
         CONTENT_TYPE = "webp"
     if fname_temp.suffix.endswith("png"):
@@ -189,6 +191,8 @@ async def update_manufacturer(itemID: str, manufacturer: ManufacturerEdit):
 
         # 기존 버켓에 있던 이미지는 이름 그대로, 바뀜
         CONTENT_TYPE = None
+        if fname_temp.suffix.endswith("svg"):
+            CONTENT_TYPE = "svg+xml"
         if fname_temp.suffix.endswith("webp"):
             CONTENT_TYPE = "webp"
         if fname_temp.suffix.endswith("png"):
