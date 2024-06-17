@@ -1,23 +1,14 @@
 """Nation models."""
 
 from datetime import datetime
-from typing import Annotated, Any, Optional
+from typing import Any, Optional
 
 from beanie import Document, Indexed, Link
-from pydantic import BaseModel, EmailStr, Field, HttpUrl, TypeAdapter, BeforeValidator
-from typing import Literal, List
-import pymongo
+from typing import List
 from .i18n import i18n
-
+from app.types.http import Url
 
 __all__ = ("Nation", "dbInit")
-
-
-http_url_adapter = TypeAdapter(HttpUrl)
-
-Url = Annotated[
-    str, BeforeValidator(lambda value: str(http_url_adapter.validate_python(value)))
-]
 
 
 class NationName(i18n):

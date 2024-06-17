@@ -5,18 +5,10 @@ from typing import Annotated, Any, Optional
 
 from beanie import Document, Indexed, Link
 from .nation import Nation
-from pydantic import BaseModel, EmailStr, Field, HttpUrl, TypeAdapter, BeforeValidator
 
+from app.types.http import Url
 from typing import Literal, List
-import pymongo
 from .i18n import i18n
-
-
-http_url_adapter = TypeAdapter(HttpUrl)
-
-Url = Annotated[
-    str, BeforeValidator(lambda value: str(http_url_adapter.validate_python(value)))
-]
 
 __all__ = ("Manufacturer", "dbInit")
 
