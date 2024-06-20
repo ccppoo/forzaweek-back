@@ -35,6 +35,7 @@ class _CF_R2_Settings(BaseSettings):
     R2_ENDPOINT: str
     LOCATION: str
     BUCKET: str
+    URL_BASE: str
 
     ## Pydantic V2
     model_config = SettingsConfigDict(
