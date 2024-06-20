@@ -40,7 +40,7 @@ class ImageURLRequest(BaseModel):
 async def add_nation_flag(folder: str, file: UploadFile):
     # TODO: 파일 업로드하고 사용 안된 임시파일 삭제하기
 
-    temp_image_allow = ["nation", "manufacturer"]
+    temp_image_allow = ["nation", "manufacturer", "car"]
 
     requestedImage = await file.read()
 
@@ -59,4 +59,5 @@ async def add_nation_flag(folder: str, file: UploadFile):
         f.write(requestedImage)
 
     # 임시 저장한 파일 이름 다시 보내기 (어차피 경로는 POST : /nation으로 오니깐)
+    # print(f"temp_file_name : {temp_file_name}")
     return {"image": temp_file_name}
