@@ -5,13 +5,14 @@ from typing import Annotated, Any, Optional
 
 from beanie import Document, Indexed, Link
 from pydantic import BaseModel, EmailStr, Field
-from typing import Literal, List
+from typing import Literal, List, Union
 from .manufacturer import Manufacturer
 from .driveTrain import DriveTrain
 from .bodyStyle import BodyStyle
 from .i18n import i18n
 from .engine import Engine
-
+from app.types.http import Url
+from .component.fh5 import FH5_meta
 
 __all__ = ("Car", "dbInit")
 
@@ -32,33 +33,32 @@ class CarName(i18n):
     pass
 
 
-class CarAbbreviation(i18n):
+class CarShortName(i18n):
     # value : str
     # lang: str
-    pass
-
-
-class DriveTrainTypeName(i18n):
-    pass
-
-
-class EngineTypeName(i18n):
     pass
 
 
 class Car(Document):
     """Car DB representation."""
 
-    name: List[Link[CarName]]
-    abbreviation: List[Link[CarAbbreviation]]
     manufacturer: Link[Manufacturer]
-    bodyStyle: Link[BodyStyle]
-    driveTrainType: List[Link[DriveTrainTypeName]]
-    driveTrain: Optional[Link[DriveTrain]]
-    engineType: List[Link[EngineTypeName]]
-    engine: Optional[Link[Engine]]
-    year: int
-    door: int = Field(default=0)
+
+    images: List[Url]
+    first_image: Optional[Url]
+
+    production_year: int = Field(ge=1900, le=2560)
+    engine_type: str
+    body_style: str
+    door: int = Field(ge=0)
+
+    name_en: str
+    name: List[Link[CarName]]
+
+    short_name_en: str
+    short_name: List[Link[CarShortName]]
+
+    fh5_meta: FH5_meta
 
     @property
     def created(self) -> datetime | None:
@@ -79,7 +79,6 @@ class Car(Document):
 
         manu = None
         if isinstance(self.manufacturer, Link):
-            print("asdasdasd")
             print(f"{self.manufacturer=}")
             mmm = await self.manufacturer.fetch(fetch_links=True)
             manu = mmm.to_json()
@@ -119,6 +118,30 @@ class Car(Document):
             "lang": lang,
         }
 
+    async def to_json_all_lang(self, _id: bool = False) -> dict[str, Any]:
+        # await self.fetch_all_links()
+        # 직접 id 가져오는 방법?
+
+        name = [x.model_dump(include=["value", "lang"]) for x in self.name]
+        short_name = [x.model_dump(include=["value", "lang"]) for x in self.name]
+
+        _id = self.model_dump(include=["id"])["id"]
+        return {
+            "id": _id,
+            "manufacturer": self.manufacturer.to_json_all_lang(),
+            "name_en": self.name_en,
+            "name": name,
+            "short_name_en": self.short_name_en,
+            "short_name": short_name,
+            "imageURLs": self.images,
+            "firstImage": self.first_image,
+            "production_year": self.production_year,
+            "engineType": self.engine_type,
+            "bodyStyle": self.body_style,
+            "door": self.door,
+            "fh5_meta": self.fh5_meta,
+        }
+
     class Settings:
         name = "car"
 
@@ -126,7 +149,5 @@ class Car(Document):
 dbInit = (
     Car,
     CarName,
-    CarAbbreviation,
-    DriveTrainTypeName,
-    EngineTypeName,
+    CarShortName,
 )
