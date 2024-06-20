@@ -16,15 +16,17 @@ from app.models.nation import Nation as NationDB, NationName
 from app.models.car import (
     Car as CarDB,
     CarName,
-    CarAbbreviation,
-    EngineTypeName,
-    DriveTrainTypeName,
+    CarShortName,
 )
+from app.models.component.fh5 import FH5_meta
+
 from app.models.bodyStyle import BodyStyle as BodyStyleDB, BodyStyleName
 from app.models.driveTrain import DriveTrain as DriveTrainDB, DriveTrainName
 from app.models.engine import Engine as EngineDB, EngineName, EngineDescription
-import urllib
+from app.utils.random import random_uuid
+import asyncio
 
+from app.services.image import resolve_temp_image
 
 router = APIRouter(prefix="/car", tags=["car"])
 
@@ -34,128 +36,91 @@ class Nation(BaseModel):
     locale: str
 
 
-class Car(BaseModel):
-    name: str  # CarName
-    abbreviation: Optional[str]  # CarAbbreviation
-    manufacturer: str  #  Manufacturer
-    bodyStyle: str  # BodyStyle
-    driveTrainType: str  # FWD, AWD, RWD - 간단한 분류
-    driveTrain: Optional[str] = Field(default=None)  # DriveTrain
-    engineType: str  # 내연기관, 전기 - 간단한 분류
-    engine: Optional[str] = Field(default=None)  # Engine
-    year: int
-    door: int
-    lang: str
-
-
 class CarGet(BaseModel):
     name: str
     lang: str
 
 
+class CarCreate(BaseModel):
+
+    manufacturer: str
+
+    imageURLs: List[str]
+    firstImage: Optional[str]
+
+    production_year: int = Field(ge=1900, le=2560)
+    engineType: str
+    bodyStyle: str
+    door: int = Field(ge=0)
+
+    name_en: str
+    name: List[CarName]
+
+    short_name_en: str
+    short_name: List[CarShortName]
+
+    fh5_meta: FH5_meta
+
+
 @router.get("")
-async def get_car(car: CarGet):
+async def get_all_cars():
 
-    carDB = await CarDB.find_one(
-        CarDB.name.lang == car.lang,
-        CarDB.name.value == car.name,
-        fetch_links=True,
-    )
+    cars = await CarDB.find_all().to_list()
+    [await car.fetch_all_links() for car in cars]
 
-    if carDB:
-        carDB: CarDB
-        return await carDB.to_json(car.lang)
-
-    return carDB
+    a = [await car.to_json_all_lang() for car in cars]
+    return a
 
 
 @router.post("")
-async def add_car(car: Car):
-
-    lang = car.lang
-    name = car.name
+async def add_car(car: CarCreate):
 
     carDB = await CarDB.find_one(
-        CarDB.name.lang == lang,
-        CarDB.name.value == name,
+        CarDB.name_en == car.name_en,
         fetch_links=True,
     )
 
+    # 1. 이미 존재하는 차
     if carDB:
-        return await carDB.to_json(lang)
+        return
+    # 2. 제조사 확인
+    manufacturer = await ManufacturerDB.get(car.manufacturer)
 
-    carName = await CarName(value=car.name, lang=lang).insert()
-    carAbbrev = await CarAbbreviation(
-        value=car.abbreviation or car.name, lang=lang
-    ).insert()
+    if not manufacturer:
+        return
 
-    # 제조사
-    carManufacture = await ManufacturerDB.find_one(
-        ManufacturerDB.name.value == car.manufacturer,
-        ManufacturerDB.name.lang == car.lang,
-        fetch_links=True,
+    # 3. 새로 올라온 사진 저장
+    if car.firstImage not in car.imageURLs:
+        return
+    first_img_idx = car.imageURLs.index(car.firstImage)
+
+    # TODO: asyncio 아니면 병렬로 수정한 후 바꿀것
+    uploaded_images = []
+    for img in car.imageURLs:
+        random_name = random_uuid(replace_dash="")
+        httpUrl = resolve_temp_image("car", img, random_name, car.short_name_en)
+        uploaded_images.append(httpUrl)
+
+    first_image_url = uploaded_images[first_img_idx]
+
+    # 4. 이름 저장
+    await asyncio.gather(
+        *[n.insert() for n in car.name], *[sn.insert() for sn in car.short_name]
     )
-
-    # if carManufacture:
-    # print(f"{carManufacture=}")
-
-    # 바디 스타일
-    carBodystyle = await BodyStyleDB.find_one(
-        BodyStyleDB.name.value == car.bodyStyle, BodyStyleDB.name.lang == car.lang
-    )
-
-    if not carBodystyle:
-        bodyStyleName = await BodyStyleName(value=car.bodyStyle, lang=car.lang).insert()
-        carBodystyle = await BodyStyleDB(
-            name=[bodyStyleName],
-        ).insert()
-
-    # 구동방식 이름
-    driveTrainTypeName = await DriveTrainTypeName.find_one(
-        DriveTrainTypeName.value == car.driveTrainType,
-        DriveTrainTypeName.lang == car.lang,
-    )
-    if not driveTrainTypeName:
-        driveTrainTypeName = await DriveTrainTypeName(
-            value=car.driveTrainType, lang=car.lang
-        ).insert()
-
-    driveTrainDB = None
-    # 구동 방식 (세부 종류)
-    if car.driveTrain:
-        driveTrainDB = await DriveTrainDB.find_one(
-            DriveTrainDB.abbreviation == car.driveTrain
-        )
-        # 이거는 사전에 등록해야하는 정보
-
-    # 엔진 이름
-    engineTypeName = await EngineTypeName.find_one(
-        EngineTypeName.value == car.engineType,
-        EngineTypeName.lang == car.lang,
-    )
-    if not engineTypeName:
-        engineTypeName = await EngineTypeName(
-            value=car.engineType, lang=car.lang
-        ).insert()
-
-    carEngineDB = None
-    # 엔진 (세부 종류)
-    if car.engine:
-        carEngineDB = await EngineDB.find_one(
-            EngineDB.name.value == car.engine, EngineDB.name.lang == car.lang
-        )
-        # 없으면 사전 등록 ㅇㅇ
 
     carDB: CarDB = await CarDB(
-        name=[carName],
-        abbreviation=[carAbbrev],
-        manufacturer=carManufacture,
-        driveTrainType=[driveTrainTypeName],
-        driveTrain=driveTrainDB,
-        engineType=[engineTypeName],
-        engine=carEngineDB,
-        bodyStyle=carBodystyle,
-        year=car.year,
+        manufacturer=manufacturer,
+        images=uploaded_images,
+        first_image=first_image_url,
+        body_style=car.bodyStyle,
         door=car.door,
+        engine_type=car.engineType,
+        name_en=car.name_en,
+        name=car.name,
+        short_name_en=car.short_name_en,
+        short_name=car.short_name,
+        production_year=car.production_year,
+        fh5_meta=car.fh5_meta,
     ).insert()
+
     return carDB.model_dump()
