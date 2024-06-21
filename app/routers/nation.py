@@ -145,7 +145,7 @@ async def get_nation_for_edit(itemID: str):
 async def update_nation(itemID: str, nation: NationEdit):
     assert itemID == nation.id
 
-    NAME_EN = nation.name_en.replace(" ", "_")
+    NAME_EN = nation.name_en
     NEW_IMAGE = not nation.imageURL.startswith("https")  # blob:// ...
 
     nat_old = await NationDB.get(nation.id, fetch_links=True)

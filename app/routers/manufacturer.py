@@ -160,7 +160,7 @@ async def update_manufacturer(itemID: str, manufacturer: ManufacturerEdit):
 
     man_old = await ManufacturerDB.get(manufacturer.id, fetch_links=True)
 
-    NAME_EN = manufacturer.name_en.replace(" ", "_")
+    NAME_EN = manufacturer.name_en
     NEW_IMAGE = not manufacturer.imageURL.startswith("https")  # blob:// ...
     man_old_origin_id = man_old.origin.model_dump(include=["id"])["id"]
     NEW_NATION = manufacturer.origin != man_old_origin_id
