@@ -13,6 +13,7 @@ from .i18n import i18n
 from .engine import Engine
 from app.types.http import Url
 from .component.fh5 import FH5_meta
+from pprint import pprint
 
 __all__ = ("Car", "dbInit")
 
@@ -142,8 +143,35 @@ class Car(Document):
             "fh5_meta": self.fh5_meta,
         }
 
+    async def to_json_edit(self) -> dict[str, Any]:
+        # print(self.manufacturer.to_ref().id)
+
+        await self.fetch_link(Car.name)
+        await self.fetch_link(Car.short_name)
+
+        name = [x.model_dump(include=["value", "lang"]) for x in self.name]
+        short_name = [x.model_dump(include=["value", "lang"]) for x in self.short_name]
+
+        aa = {
+            "id": str(self.id),
+            "manufacturer": str(self.manufacturer.to_ref().id),
+            "name_en": self.name_en,
+            "name": name,
+            "short_name_en": self.short_name_en,
+            "short_name": short_name,
+            "imageURLs": self.images,
+            "firstImage": self.first_image,
+            "production_year": self.production_year,
+            "engineType": self.engine_type,
+            "bodyStyle": self.body_style,
+            "door": self.door,
+            "fh5_meta": self.fh5_meta,
+        }
+        return aa
+
     class Settings:
         name = "car"
+        use_state_management = True
 
 
 dbInit = (
