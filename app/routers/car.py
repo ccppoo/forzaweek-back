@@ -7,11 +7,10 @@ import json
 from pprint import pprint
 from datetime import datetime
 from bson import ObjectId
+from beanie import WriteRules, DeleteRules
 
 from app.models.manufacturer import (
     Manufacturer as ManufacturerDB,
-    ManufacturerDescription,
-    ManufacturerName,
 )
 from app.models.nation import Nation as NationDB, NationName
 from app.models.car import (
@@ -232,6 +231,22 @@ async def update_manufacturer(itemID: str, car: CarEdit):
     ]
     if old_name_jobs:
         await asyncio.gather(*old_name_jobs)
+
+    return 200
+
+
+@router.delete("/{itemID}")
+async def delete_car(itemID: str):
+    car: CarDB = await CarDB.get(itemID, fetch_links=True)
+    if not car:
+        return
+
+    name_delete = [
+        *[cn.delete() for cn in car.name],
+        *[cn.delete() for cn in car.short_name],
+    ]
+    await asyncio.gather(*name_delete)
+    await car.delete(link_rule=DeleteRules.DO_NOTHING)
 
     return 200
 

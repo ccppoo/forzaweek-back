@@ -3,7 +3,7 @@
 from datetime import datetime
 from typing import Any, Optional
 
-from beanie import Document, Indexed, Link
+from beanie import Document, Link
 from typing import List
 from .i18n import i18n
 from app.types.http import Url

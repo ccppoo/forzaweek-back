@@ -9,7 +9,7 @@ import json
 from pprint import pprint
 from datetime import datetime
 from app.configs import awsSettings, runtimeSettings, cfSettings
-
+from app.models.car import Car
 from app.models.manufacturer import (
     Manufacturer as ManufacturerDB,
     ManufacturerName,
@@ -147,10 +147,22 @@ async def add_manufacturer(manufacturer: ManufacturerCreate):
 
 @router.delete("/{itemID}")
 async def delete_manufacturer(itemID: str):
-    nation: ManufacturerDB = await ManufacturerDB.get(itemID, fetch_links=True)
-    if not nation:
+    manufacturer: ManufacturerDB = await ManufacturerDB.get(itemID, fetch_links=True)
+    if not manufacturer:
         return
-    await nation.delete(link_rule=DeleteRules.DELETE_LINKS)
+
+    cars = await Car.find(Car.manufacturer.id == manufacturer.to_ref().id).to_list()
+
+    has_dependencies = len(cars)
+
+    if has_dependencies:
+        # TODO: 의존하는 제조사 DB 먼저 삭제하라고 하기
+        return
+    name_delete = [mn.delete() for mn in manufacturer.name]
+
+    await asyncio.gather(*name_delete)
+    await manufacturer.delete(link_rule=DeleteRules.DO_NOTHING)
+
     return 200
 
 

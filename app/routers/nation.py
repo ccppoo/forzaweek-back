@@ -1,8 +1,6 @@
 from __future__ import annotations
 from fastapi import APIRouter, UploadFile, File
-from fastapi.websockets import WebSocketState
 from pydantic import BaseModel, Field, HttpUrl, FilePath
-import anyio
 from typing import List, Dict, Any, Optional
 import asyncio
 import json
@@ -11,14 +9,12 @@ from datetime import datetime
 import uuid
 from app.configs import awsSettings, runtimeSettings, cfSettings
 from app.models.nation import Nation as NationDB, NationName
+from app.models.manufacturer import Manufacturer
 from beanie import WriteRules, DeleteRules
-import botocore
-import urllib
 from fastapi import FastAPI, File, UploadFile
 import pathlib
 import os
-import boto3
-
+from app.cloud import client_r2
 
 router = APIRouter(prefix="/nation", tags=["nation"])
 
@@ -42,23 +38,6 @@ class NationEdit(BaseModel):
     imageURL: str
 
 
-# client_s3 = boto3.client(
-#     "s3",
-#     awsSettings.REGION,
-#     aws_access_key_id=awsSettings.CREDENTIALS_ACCESS_KEY,
-#     aws_secret_access_key=awsSettings.CREDENTIALS_SECRET_KEY,
-# )
-# aws_temp = "https://forzaweek-image-main-storage.s3.ap-northeast-2.amazonaws.com/{folder}/{name}"
-
-client_r2 = boto3.client(
-    service_name="s3",
-    endpoint_url=cfSettings.R2_ENDPOINT,
-    aws_access_key_id=cfSettings.ACCESS_KEY,
-    aws_secret_access_key=cfSettings.SECRET_ACCESS_KEY,
-    region_name=cfSettings.LOCATION,
-)
-
-
 @router.get("")
 async def get_all_nation():
 
@@ -74,6 +53,15 @@ async def delete_nation(itemID: str):
     nation: NationDB = await NationDB.get(itemID, fetch_links=True)
     if not nation:
         return
+    manufacturers = await Manufacturer.find(
+        Manufacturer.origin.id == nation.to_ref().id
+    ).to_list()
+    has_dependencies = len(manufacturers)
+
+    if has_dependencies:
+        # TODO: 의존하는 제조사 DB 먼저 삭제하라고 하기
+        return
+
     await nation.delete(link_rule=DeleteRules.DELETE_LINKS)
     return 200
 
