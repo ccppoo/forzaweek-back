@@ -4,6 +4,7 @@ from .manufacturer import dbInit as manufacturerDBInit
 from .nation import dbInit as nationDBInit
 from .stat import dbInit as statDBInit
 from .tag import dbInit as tagDBInit
+from .decal import dbInit as decalDBInit
 from .tuning import dbInit as tuningDBInit
 from .track import dbInit as trackDBInit
 from .tuning import dbInit as tuningDBInit
@@ -24,6 +25,7 @@ models = [
     *carDBInit,
     *statDBInit,
     *tagDBInit,
+    *decalDBInit,
     *tuningDBInit,
     *trackDBInit,
     *tuningDBInit,

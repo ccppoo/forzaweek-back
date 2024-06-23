@@ -15,23 +15,54 @@ class TagName(i18n):
 class TagDescription(i18n):
     # value : str
     # lang: str
-    pass
+
+    def is_empty(self) -> bool:
+        if not self.value:
+            return True
+        return False
 
 
 class Tag(Document):
 
-    name: Link[TagName]
-    description: Link[TagDescription]
-    kind: Literal[
-        "car",
-        "track",
-        "tuning",
-    ] = Field(default=None)
+    name: List[Link[TagName]]
+    name_en: str
+
+    description: List[Link[TagDescription]]
+    kind: Literal["car", "track", "tuning", "decal"] = Field(default=None)
+
     mergedTo: Optional[Link["Tag"]] = Field(default=None)
 
+    def to_json_all_lang(self):
+        names = [
+            x.model_dump(
+                include=["value", "lang"],
+            )
+            for x in self.name
+        ]
+        descriptions = [
+            x.model_dump(
+                include=["value", "lang"],
+            )
+            for x in self.description
+        ]
+        # 직접 id 가져오는 방법?
+        _id = self.model_dump(include=["id"])["id"]
+
+        # mergedToTag = mergedTo
+
+        return {
+            "id": _id,
+            "name": names,
+            "name_en": self.name_en,
+            "description": descriptions,
+            "kind": self.kind,
+            "mergedTo": self.mergedTo,
+        }
+
     class Settings:
-        is_root = True
         name: str = "tag"
+        use_state_management = True
+        is_root = True
 
 
 dbInit = (Tag, TagName, TagDescription)

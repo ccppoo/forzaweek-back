@@ -35,6 +35,7 @@ app.include_router(nationRouter)
 app.include_router(manufacturerRouter)
 app.include_router(carRouter)
 app.include_router(dataRouter)
+app.include_router(tagRouter)
 
 
 @app.get("/")
