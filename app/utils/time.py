@@ -1,5 +1,19 @@
 from datetime import datetime, timezone
+from enum import Enum
+
+
+class Datetime_Format(str, Enum):
+    YYYYMMDD = "%Y%m%d"
+    HHMMSS = "%H%M%S"
 
 
 def datetime_utc() -> datetime:
-    return datetime(tzinfo=timezone.utc)
+    return datetime.now(tz=timezone.utc)
+
+
+def timestamp_utc_ms() -> int:
+    return int(datetime.now(tz=timezone.utc).timestamp() * 1000)
+
+
+def datetime_utc_format(format: Datetime_Format) -> str:
+    return datetime.now(tz=timezone.utc).strftime(format)
