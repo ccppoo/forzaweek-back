@@ -60,6 +60,23 @@ class Nation(Document):
             "imageURL": self.imageURL,
         }
 
+    def to_indexedDB(self) -> dict[str, Any]:
+        # id: string;
+        # name: i18n[];
+        # name_en: string;
+        # imageURL: string;
+        name = {x.lang: x.value for x in self.name}
+
+        # 직접 id 가져오는 방법?
+        _id = self.model_dump(include=["id"])["id"]
+
+        return {
+            "id": _id,
+            "name_en": self.name_en,
+            "name": name,
+            "imageURL": self.imageURL,
+        }
+
     class Settings:
         name = "nation"
         use_state_management = True

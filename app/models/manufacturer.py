@@ -62,6 +62,26 @@ class Manufacturer(Document):
             "imageURL": self.imageURL,
         }
 
+    def to_indexedDB(self):
+        # id: string;
+        # name: i18n[];
+        # name_en: string;
+        # founded: number;
+        # nation: string; // nation ID
+        # imageURL: string;
+        name = {x.lang: x.value for x in self.name}
+        # 직접 id 가져오는 방법?
+        _id = self.model_dump(include=["id"])["id"]
+        _origin_id = self.origin.model_dump(include=["id"])["id"]
+        return {
+            "id": _id,
+            "name": name,
+            "name_en": self.name_en,
+            "origin": _origin_id,
+            "founded": self.founded,
+            "imageURL": self.imageURL,
+        }
+
     class Settings:
         name = "manufacturer"
         use_state_management = True

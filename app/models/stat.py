@@ -4,12 +4,15 @@ from typing import List, Optional, List, Literal
 from .tag import Tag
 from .car import Car
 from datetime import datetime
+import app.models.FH5.car as fh5
 
 __all__ = ("Stat", "FH5_Stat", "dbInit")
 
 
-class Stat(Document):
-    """Stat DB representation."""
+class StatBase(Document):
+    """StatBase DB representation."""
+
+    # FH5, FH4 모두 이거 상속 받기!
 
     car: Link[Car]
 
@@ -22,29 +25,10 @@ class Stat(Document):
         is_root = True
 
 
-class FH5_Stat(Stat):
+class FH5_Stat(StatBase, fh5.Major_Parts, fh5.Performance, fh5.Test_Readings):
     # car : Link[Car]
 
     PI: int = Field(ge=100, le=999)
-
-    # performance
-    speed: float = Field(default=0, ge=0, le=10)
-    handling: float = Field(default=0, ge=0, le=10)
-    acceleration: float = Field(default=0, ge=0, le=10)
-    launch: float = Field(default=0, ge=0, le=10)
-    braking: float = Field(default=0, ge=0, le=10)
-    offroad: float = Field(default=0, ge=0, le=10)
-
-    # test readings
-    drive_train: Optional[Literal["AWD", "FWD", "RWD"]] = Field(default=None)
-    kg: Optional[int] = Field(default=None)
-    kw: Optional[float] = Field(default=None)
-    Lateral_G: Optional[float] = Field(default=None)
-    accel_100kh: Optional[float] = Field(default=None)
-    accel_100mh: Optional[float] = Field(default=None)
-
-    # meta
-    rarity: str = Field()
 
     @property
     def pi_rank(self) -> Literal["D", "C", "B", "A", "S1", "S2", "X"]:
@@ -62,15 +46,5 @@ class FH5_Stat(Stat):
             return "S2"
         return "X"
 
-    @property
-    def hp(self) -> Optional[float]:
-        if self.kw:
-            return round(self.kw * 0.746, 2)
 
-    @property
-    def ps(self) -> Optional[float]:
-        if self.kw:
-            return round(self.kw * 0.736, 2)
-
-
-dbInit = (Stat, FH5_Stat)
+dbInit = (StatBase, FH5_Stat)
