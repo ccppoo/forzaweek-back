@@ -18,7 +18,7 @@ from app.models.car import (
     CarName,
     CarShortName,
 )
-from app.models.component.fh5 import FH5_meta
+from app.models.FH5.car import CarFH5base
 
 from app.models.bodyStyle import BodyStyle as BodyStyleDB, BodyStyleName
 from app.models.driveTrain import DriveTrain as DriveTrainDB, DriveTrainName
@@ -59,7 +59,7 @@ class CarCreate(BaseModel):
     short_name_en: str
     short_name: List[CarShortName]
 
-    fh5_meta: FH5_meta
+    fh5: Optional[CarFH5base]
 
 
 class CarEdit(BaseModel):
@@ -80,7 +80,9 @@ class CarEdit(BaseModel):
     short_name_en: str
     short_name: List[CarShortName]
 
-    fh5_meta: FH5_meta
+    fh5: Optional[CarFH5base]
+    # FUTURE: Forza Horizon 4 support
+    # fh4: Optional[CarFH4base]
 
 
 @router.get("")
@@ -144,7 +146,7 @@ async def add_car(car: CarCreate):
         short_name_en=car.short_name_en,
         short_name=car.short_name,
         production_year=car.production_year,
-        fh5_meta=car.fh5_meta,
+        fh5=car.fh5,
     ).insert()
 
     return carDB.model_dump()
@@ -210,7 +212,7 @@ async def update_manufacturer(itemID: str, car: CarEdit):
     car_old.production_year = car.production_year
 
     # 5. Forza Horizon 5 Meta
-    car_old.fh5_meta = car.fh5_meta
+    car_old.fh5 = car.fh5
 
     # 6. DB에 저장
     car_old.name = names
@@ -231,6 +233,8 @@ async def update_manufacturer(itemID: str, car: CarEdit):
     ]
     if old_name_jobs:
         await asyncio.gather(*old_name_jobs)
+
+    # TODO: FH5 정보 수정 로직 업데이트
 
     return 200
 
@@ -253,7 +257,7 @@ async def delete_car(itemID: str):
 
 @router.get("/edit/{itemID}")
 async def get_car_for_edit(itemID: str):
-    _carDB = await CarDB.get(itemID, fetch_links=False)
+    _carDB = await CarDB.get(itemID, fetch_links=True)
 
     if not _carDB:
         return

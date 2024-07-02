@@ -16,7 +16,6 @@ from app.models.car import (
     CarName,
     CarShortName,
 )
-from app.models.component.fh5 import FH5_meta
 
 from app.utils.random import random_uuid
 import asyncio

@@ -2,8 +2,6 @@ from __future__ import annotations
 from fastapi import APIRouter, UploadFile, File
 from pydantic import BaseModel, Field, HttpUrl, FilePath
 from typing import List, Dict, Any, Optional
-import asyncio
-import json
 from pprint import pprint
 from datetime import datetime
 import uuid
@@ -15,6 +13,7 @@ from fastapi import FastAPI, File, UploadFile
 import pathlib
 import os
 from app.cloud import client_r2
+from app.services.dbState import updateDBState
 
 router = APIRouter(prefix="/nation", tags=["nation"])
 
@@ -108,11 +107,13 @@ async def add_nation(nation: NationCreate):
     # 2. DB에 저장
     inserted_i18n = [await nname.insert() for nname in nation.i18n]
 
-    nation_inserted = await NationDB(
+    new_nation = NationDB(
         name=inserted_i18n,
         name_en=nation.name_en,
         imageURL=cf_temp.format(folder=folder, name=new_filename),
-    ).insert()
+    )
+    await new_nation.insert()
+    await updateDBState("add", "nation", "MIN", [new_nation.to_ref()])
 
     # pprint(nation_inserted)
 

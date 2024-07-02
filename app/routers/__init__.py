@@ -5,3 +5,4 @@ from .manufacturer import router as manufacturerRouter
 from .car import router as carRouter
 from .data import router as dataRouter
 from .tag import router as tagRouter
+from .indexedDB import router as indexedDBRouter
