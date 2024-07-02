@@ -12,7 +12,8 @@ from .bodyStyle import BodyStyle
 from .i18n import i18n
 from .engine import Engine
 from app.types.http import Url
-from .component.fh5 import FH5_meta
+from app.models.FH5.car import CarFH5base
+
 from pprint import pprint
 
 __all__ = ("Car", "dbInit")
@@ -43,7 +44,7 @@ class CarShortName(i18n):
 class Car(Document):
     """Car DB representation."""
 
-    manufacturer: Link[Manufacturer]
+    manufacturer: Link[Manufacturer]  # 국가 추출해서
 
     images: List[Url]
     first_image: Optional[Url]
@@ -59,7 +60,7 @@ class Car(Document):
     short_name_en: str
     short_name: List[Link[CarShortName]]
 
-    fh5_meta: FH5_meta
+    fh5: Optional[CarFH5base]
 
     @property
     def created(self) -> datetime | None:
@@ -140,14 +141,14 @@ class Car(Document):
             "engineType": self.engine_type,
             "bodyStyle": self.body_style,
             "door": self.door,
-            "fh5_meta": self.fh5_meta,
+            "fh5": self.fh5,
         }
 
     async def to_json_edit(self) -> dict[str, Any]:
         # print(self.manufacturer.to_ref().id)
 
-        await self.fetch_link(Car.name)
-        await self.fetch_link(Car.short_name)
+        # await self.fetch_link(Car.name)
+        # await self.fetch_link(Car.short_name)
 
         name = [x.model_dump(include=["value", "lang"]) for x in self.name]
         short_name = [x.model_dump(include=["value", "lang"]) for x in self.short_name]
@@ -165,9 +166,86 @@ class Car(Document):
             "engineType": self.engine_type,
             "bodyStyle": self.body_style,
             "door": self.door,
-            "fh5_meta": self.fh5_meta,
+            "fh5": self.fh5,
         }
         return aa
+
+    def indexedDB_car(self):
+        """
+        id?: number;
+
+        name: string; -> 번역 항목으로 변환
+        short_name : i18n -> 추가
+        model: string; -> 제거 (name, short name으로 대체할 예정임)
+        year: number; -> production year
+
+        country: string; -> 제거
+        manufacture: string; -> 제조사 document ID로 제공하고, country는 제조사의 국가로 참조값 형태로 쿼리할 수 있도록
+
+        driveTrain: string; -> 제거
+        door: number; -> ㅇㅇ
+        engine: string; -> ㅇㅇ
+        bodyStyle: string; -> ㅇㅇ
+        """
+
+        name = {x.lang: x.value for x in self.name}
+        short_name = {x.lang: x.value for x in self.short_name}
+
+        # "fh5_meta": self.fh5_meta -> 따로
+
+        # image는 table 따로 만들예정
+        # "imageURLs": self.images,
+        # "firstImage": self.first_image,
+
+        return {
+            "id": str(self.id),
+            "manufacturer": str(self.manufacturer.id),
+            "name_en": self.name_en,
+            "name": name,
+            "short_name_en": self.short_name_en,
+            "short_name": short_name,
+            "productionYear": self.production_year,
+            "engineType": self.engine_type,
+            "bodyStyle": self.body_style,
+            "door": self.door,
+        }
+
+    def indexedDB_fh5_meta(self):
+        """
+        id: string; - 원래 차 document ID
+        division: string;
+        rarity: string;
+        boost: string;
+        value: number;
+        """
+
+        fh5_meta = self.fh5.meta.model_dump(exclude=["_id", "id"])
+        return {"id": str(self.id), **fh5_meta}
+
+    def indexedDB_fh5_performance(self):
+        """
+        id: string; - 원래 차 document ID
+        division: string;
+        rarity: string;
+        boost: string;
+        value: number;
+        """
+
+        fh5_performance = self.fh5.performance.model_dump(exclude=["_id", "id"])
+
+        return {
+            "id": str(self.id),
+            "pi": self.fh5.pi,
+            **fh5_performance,
+        }
+
+    def indexedDB_images(self):
+        """
+        id: string; - 원래 차 document ID
+        first: string;
+        images: string[];
+        """
+        return {"id": str(self.id), "first": self.first_image, "images": self.images}
 
     class Settings:
         name = "car"
