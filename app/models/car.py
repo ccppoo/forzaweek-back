@@ -200,6 +200,7 @@ class Car(Document):
         return {
             "id": str(self.id),
             "manufacturer": str(self.manufacturer.id),
+            "nation": str(self.manufacturer.origin.id),
             "name_en": self.name_en,
             "name": name,
             "short_name_en": self.short_name_en,

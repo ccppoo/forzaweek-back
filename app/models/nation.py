@@ -4,7 +4,7 @@ from datetime import datetime
 from typing import Any, Optional
 
 from beanie import Document, Link
-from typing import List
+from typing import List, Literal
 from .i18n import i18n
 from app.types.http import Url
 
