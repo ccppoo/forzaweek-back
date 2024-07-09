@@ -6,6 +6,55 @@
   }, 
   "editor.tabSize": 4,
   "python.REPL.enableREPLSmartSend": false,
-  
+  "todohighlight.isEnable": true,
+  "todohighlight.isCaseSensitive": true,
+  "todohighlight.keywords": [
+    "DEBUG:",
+    "REVIEW:",
+    {
+        "text": "WARNING:",
+        "color": "#ff0000",
+        "backgroundColor": "black",
+        "overviewRulerColor": "grey"
+    },
+    {
+        "text": "NOTE:",
+        "color": "#ff0000",
+        "backgroundColor": "yellow",
+        "overviewRulerColor": "grey"
+    },
+    {
+        "text": "FUTURE:",
+        "color": "#000",
+        "isWholeLine": false,
+    },
+    {
+        "text": "TODO:",
 
+    },
+],
+"todohighlight.defaultStyle": {
+        // "color": "red",
+        // "backgroundColor": "#ffab00",
+        // "overviewRulerColor": "#ffab00",
+        // "cursor": "pointer",
+        // "border": "1px solid #eee",
+        // "borderRadius": "2px",
+        "isWholeLine": false,
+    },
+    "todohighlight.include": [
+        "app/*.py",
+        "**/*.md",
+    ],
+    "todohighlight.exclude": [
+        "**/__pycache__/**",
+        "**/.venv/**",
+        "**/doc/**",
+        "**/dockerfiles/**",
+        "**/.vscode/**",
+        "**/.github/**",
+        "**/samples/**",
+    ],
+    "todohighlight.maxFilesForSearch": 3000,
+    "todohighlight.toggleURI": false
 }
