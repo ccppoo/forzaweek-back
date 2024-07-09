@@ -6,3 +6,5 @@ from .car import router as carRouter
 from .data import router as dataRouter
 from .tag import router as tagRouter
 from .indexedDB import router as indexedDBRouter
+from .tagkind import router as tagKindRouter
+from .fh5 import router as FH5Router

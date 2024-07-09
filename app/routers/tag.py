@@ -1,33 +1,22 @@
 from __future__ import annotations
 from fastapi import APIRouter
-from pydantic import BaseModel, Field, validator, field_validator, root_validator
-from typing import List, Dict, Any, Optional
-import json
-from pprint import pprint
-from bson import ObjectId
-from beanie import WriteRules, DeleteRules
-
-from app.models.manufacturer import (
-    Manufacturer as ManufacturerDB,
-)
-from app.models.nation import Nation as NationDB, NationName
-from app.models.car import (
-    Car as CarDB,
-    CarName,
-    CarShortName,
-)
-
-from app.utils.random import random_uuid
+from pydantic import BaseModel, Field
 import asyncio
+
+from typing import List, Dict, Any, Optional
+from pprint import pprint
+from beanie import DeleteRules
 
 from app.services.image import resolve_temp_image
 from app.models.tag import TagDescription, TagName, Tag as TagDB
+from app.models.tag import TagKind as TagKindDB
 
 router = APIRouter(prefix="/tag", tags=["tag"])
 
 
 class TagCreate(BaseModel):
 
+    imageURL: Optional[str] = Field(default=None)
     name: List[TagName]
     name_en: str
 
@@ -39,6 +28,7 @@ class TagCreate(BaseModel):
 
 class TagEdit(BaseModel):
     id: str
+    imageURL: Optional[str] = Field(default=None)
 
     name: List[TagName]
     name_en: str
@@ -46,7 +36,11 @@ class TagEdit(BaseModel):
     description: List[TagDescription]
     kind: str
 
+    # management
+    parentTag: Optional[str] = Field(default=None)
+    childrenTag: List[str] = Field(default=[])
     mergedTo: Optional[str] = Field(default=None)
+    mergedFrom: List[str] = Field(default=[])
 
 
 @router.get("")
@@ -59,8 +53,41 @@ async def get_all_tags(kind: Optional[str] = None):
     if not kind:
         tags = await TagDB.find_all(fetch_links=True).to_list()
 
-    a = [tag.to_json_all_lang() for tag in tags]
+    a = [tag.to_front() for tag in tags]
     return a
+
+
+@router.get("/{tagID}")
+async def get_tag_by_id(tagID: str, kind: Optional[str] = None):
+
+    tag = await TagDB.get(tagID, fetch_links=True)
+
+    return tag.to_front()
+
+
+@router.get("/search/a")
+async def search_tag_by_keyword(keyword: Optional[str] = None):
+    """
+    TODO:
+    태그 검색할 때 자동완성으로 보여주는 태그 목록들
+    프론트에서 500ms 딜레이로 요청을 보내지만 딜레이나 백엔드에서 제어 및 캐싱 전략 짤 것
+    """
+    print(f"{keyword=}")
+
+    tags = await TagName.find_many(
+        {"value": {"$regex": f"^.*{keyword}.*$", "$options": "i"}},
+    ).to_list()
+
+    tag_ids = [t.id for t in tags]
+    # print(f"{tag_ids=}")
+
+    query = {"name.$id": {"$in": tag_ids}}
+
+    tagss = await TagDB.find_many(query).to_list()
+    # pprint(tagss)
+    jobs2 = [t.fetch_all_links() for t in tagss]
+    await asyncio.gather(*jobs2)
+    return [x.to_front() for x in tagss]
 
 
 @router.post("")
@@ -75,18 +102,37 @@ async def add_tag(tag: TagCreate):
     if tagDB:
         return
 
-    # 2. 이름 저장
+    # 2. 태그 종류 조회
+    tag_kind = await TagKindDB.get(tag.kind)
+    if not tag_kind:
+        return
+
+    # 3. 사진
+    imageHttpUrl = None
+    if tag.imageURL:
+        tagKindImageName = f"tag_kind_{tag.name_en}_icon"
+        imageHttpUrl = resolve_temp_image(
+            "tagkind", tag.imageURL, tagKindImageName, tag.name_en
+        )
+
+    # 4. 이름 저장
     tag_description = [td for td in tag.description if not td.is_empty()]
     tag_names = await asyncio.gather(
         *[n.insert() for n in tag.name],
     )
     tag_descriptions = await asyncio.gather(*[td.insert() for td in tag_description])
 
+    # 당장 ㄴㄴ
+    # parent
+    # children
+    # mergedTo
+    # mergedFrom
     tagDB: TagDB = await TagDB(
         name=tag_names,
         name_en=tag.name_en,
         description=tag_descriptions,
-        kind=tag.kind,
+        imageURL=imageHttpUrl,
+        kind=tag_kind,
     ).insert()
 
     return tagDB.model_dump()

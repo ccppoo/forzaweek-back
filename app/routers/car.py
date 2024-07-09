@@ -1,31 +1,22 @@
 from __future__ import annotations
 from fastapi import APIRouter
-from fastapi.websockets import WebSocketState
 from pydantic import BaseModel, Field
+import asyncio
 from typing import List, Dict, Any, Optional
-import json
 from pprint import pprint
-from datetime import datetime
 from bson import ObjectId
-from beanie import WriteRules, DeleteRules
+from beanie import DeleteRules
 
 from app.models.manufacturer import (
     Manufacturer as ManufacturerDB,
 )
-from app.models.nation import Nation as NationDB, NationName
 from app.models.car import (
     Car as CarDB,
     CarName,
     CarShortName,
 )
-from app.models.FH5.car import CarFH5base
-
-from app.models.bodyStyle import BodyStyle as BodyStyleDB, BodyStyleName
-from app.models.driveTrain import DriveTrain as DriveTrainDB, DriveTrainName
-from app.models.engine import Engine as EngineDB, EngineName, EngineDescription
+from app.models.stat.fh5 import CarBaseStat_FH5
 from app.utils.random import random_uuid
-import asyncio
-
 from app.services.image import resolve_temp_image
 
 router = APIRouter(prefix="/car", tags=["car"])
@@ -59,7 +50,7 @@ class CarCreate(BaseModel):
     short_name_en: str
     short_name: List[CarShortName]
 
-    fh5: Optional[CarFH5base]
+    fh5: Optional[CarBaseStat_FH5]
 
 
 class CarEdit(BaseModel):
@@ -80,9 +71,9 @@ class CarEdit(BaseModel):
     short_name_en: str
     short_name: List[CarShortName]
 
-    fh5: Optional[CarFH5base]
+    fh5: Optional[CarBaseStat_FH5]
     # FUTURE: Forza Horizon 4 support
-    # fh4: Optional[CarFH4base]
+    # fh4: Optional[CarBaseStat_FH4]
 
 
 @router.get("")
