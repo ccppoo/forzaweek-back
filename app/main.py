@@ -1,16 +1,15 @@
 from fastapi import FastAPI
-
+from fastapi.middleware.cors import CORSMiddleware
 from app.routers import *
 from app.websocket import *
 from app.swagger import swaggerSettings
-from app.db.config import start_up_db
 from app.logger import get_logger
-from fastapi.middleware.cors import CORSMiddleware
+from app.lifespan import lifespan
 
 
 logger = get_logger()
 
-app = FastAPI(**swaggerSettings.model_dump())
+app = FastAPI(**swaggerSettings.model_dump(), lifespan=lifespan)
 
 
 origins = [
@@ -39,6 +38,10 @@ app.include_router(carRouter)
 app.include_router(dataRouter)
 app.include_router(tagRouter)
 app.include_router(indexedDBRouter)
+app.include_router(tagKindRouter)
+app.include_router(FH5Router)
+# websocket
+app.include_router(stateManageRouter)
 
 
 @app.get("/")
@@ -49,31 +52,3 @@ async def get_resp():
 @app.get("/global")
 async def get_resp():
     return "hello!"
-
-
-@app.on_event("startup")
-async def on_startup():
-    from app.redis import check_connection, flush_all, set_init_setup
-    from app.configs import redisSettings
-
-    from argparser import args
-
-    # redis
-    if not await check_connection():
-        print(f"Failed to Connect Redis (URI : {redisSettings.URI})")
-        exit(-1)
-    else:
-        logger.info("redis online")
-
-    await set_init_setup()
-
-    # # NOTE: 개발 단계에서만 사용
-    await flush_all()  # 재시작 이후 초기화
-    logger.info("startup complete")
-    await start_up_db(app)
-
-
-@app.on_event("shutdown")
-async def on_shutdown():
-    # shutdown process
-    logger.info("shutdown complete")
