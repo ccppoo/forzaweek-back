@@ -1,14 +1,11 @@
 """Manufacturer models."""
 
 from datetime import datetime
-from typing import Annotated, Any, Optional
-
-from beanie import Document, Indexed, Link
-from .nation import Nation
-
+from typing import Any, List
+from beanie import Document, Link
+from app.models.nation import Nation
+from app.models.i18n import i18n
 from app.types.http import Url
-from typing import Literal, List
-from .i18n import i18n
 
 __all__ = ("Manufacturer", "dbInit")
 

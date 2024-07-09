@@ -1,32 +1,18 @@
 """Car models."""
 
 from datetime import datetime
-from typing import Annotated, Any, Optional
+from typing import List, Any, Optional
+from beanie import Document, Link
+from pydantic import Field
 
-from beanie import Document, Indexed, Link
-from pydantic import BaseModel, EmailStr, Field
-from typing import Literal, List, Union
-from .manufacturer import Manufacturer
-from .driveTrain import DriveTrain
-from .bodyStyle import BodyStyle
-from .i18n import i18n
-from .engine import Engine
+from app.models.manufacturer import Manufacturer
+from app.models.i18n import i18n
 from app.types.http import Url
-from app.models.FH5.car import CarFH5base
+from app.models.stat.fh5 import CarBaseStat_FH5
 
 from pprint import pprint
 
 __all__ = ("Car", "dbInit")
-
-PI_RANKS = ["D", "C", "B", "A", "S1", "S2", "X"]
-RARITY_LITERAL = [
-    "Common",
-    "Rare",
-    "Epic",
-    "Legendary",
-    "Forza Edition",
-    "Anniversary Edition",
-]
 
 
 class CarName(i18n):
@@ -60,7 +46,7 @@ class Car(Document):
     short_name_en: str
     short_name: List[Link[CarShortName]]
 
-    fh5: Optional[CarFH5base]
+    fh5: Optional[CarBaseStat_FH5]
 
     @property
     def created(self) -> datetime | None:

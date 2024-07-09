@@ -1,11 +1,9 @@
 """Nation models."""
 
 from datetime import datetime
-from typing import Any, Optional
-
+from typing import List, Any, Optional
 from beanie import Document, Link
-from typing import List, Literal
-from .i18n import i18n
+from app.models.i18n import i18n
 from app.types.http import Url
 
 __all__ = ("Nation", "dbInit")
@@ -61,10 +59,6 @@ class Nation(Document):
         }
 
     def to_indexedDB(self) -> dict[str, Any]:
-        # id: string;
-        # name: i18n[];
-        # name_en: string;
-        # imageURL: string;
         name = {x.lang: x.value for x in self.name}
 
         # 직접 id 가져오는 방법?

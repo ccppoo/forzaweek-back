@@ -1,11 +1,9 @@
-"""Car models."""
+"""User models."""
 
 from datetime import datetime
-from typing import Annotated, Any, Optional
-
+from typing import Annotated, Any, Optional, Literal
 from beanie import Document, Indexed
 from pydantic import BaseModel, EmailStr, Field
-from typing import Literal
 import pymongo
 
 __all__ = ("FrozaUser",)
