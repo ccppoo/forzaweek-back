@@ -1,14 +1,11 @@
 """Track models."""
 
 from datetime import datetime
-from typing import Annotated, Any, Optional
-
 from beanie import Document, Link
-from pydantic import BaseModel, Field
-from typing import Literal, List
-from .tag import Tag
-from .i18n import i18n
-from .track_trait import TrackType, CourseType
+from pydantic import Field
+from typing import List
+from app.models.tag import Tag
+from app.models.i18n import i18n
 
 __all__ = ("Track", "dbInit")
 
@@ -16,16 +13,15 @@ __all__ = ("Track", "dbInit")
 class TrackName(i18n):
     # value : str
     # lang: str
-    translated: str
+    pass
 
 
-class Track(Document):
+class TrackBase(Document):
     """Track DB representation."""
 
-    name: TrackName
-    track: TrackType
-    course: CourseType
+    name: List[Link[TrackName]]
     tag: List[Link[Tag]] = Field(default=[])
+    world: str  # DLC 지역과 기본 지역 구분
 
     @property
     def created(self) -> datetime | None:
@@ -34,6 +30,8 @@ class Track(Document):
 
     class Settings:
         name = "track"
+        is_root = True
+        use_state_management = True
 
 
-dbInit = (Track, TrackName)
+dbInit = (TrackBase, TrackName)
