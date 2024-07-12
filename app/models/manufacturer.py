@@ -79,6 +79,11 @@ class Manufacturer(Document):
             "imageURL": self.imageURL,
         }
 
+    def to_simple(self):
+        _partial = self.model_dump(include=["id", "name_en", "imageURL"])
+        _name = [n.to_front() for n in self.name]
+        return {**_partial, "name": _name}
+
     class Settings:
         name = "manufacturer"
         use_state_management = True

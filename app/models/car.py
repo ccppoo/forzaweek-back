@@ -234,6 +234,14 @@ class Car(Document):
         """
         return {"id": str(self.id), "first": self.first_image, "images": self.images}
 
+    def to_simple(self):
+        _partial = self.model_dump(
+            include=["id", "name_en", "first_image", "production_year"]
+        )
+        _name = [n.to_front() for n in self.name]
+        manufacturer = self.manufacturer.to_simple()
+        return {**_partial, "name": _name, "manufacturer": manufacturer}
+
     class Settings:
         name = "car"
         use_state_management = True

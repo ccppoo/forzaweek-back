@@ -43,6 +43,11 @@ class TagKind(Document):
             "description": descriptions,
         }
 
+    def to_simple(self):
+        _partial = self.model_dump(include=["id", "imageURL", "name_en"])
+        _name = [n.to_front() for n in self.name]
+        return {**_partial, "name": _name}
+
     class Settings:
         name: str = "tagKind"
         use_state_management = True

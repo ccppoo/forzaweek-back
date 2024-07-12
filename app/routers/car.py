@@ -2,7 +2,7 @@ from __future__ import annotations
 from fastapi import APIRouter
 from pydantic import BaseModel, Field
 import asyncio
-from typing import List, Dict, Any, Optional
+from typing import List, Dict, Any, Optional, Union
 from pprint import pprint
 from bson import ObjectId
 from beanie import DeleteRules
@@ -91,7 +91,7 @@ async def add_car(car: CarCreate):
 
     _new_ObjectID = ObjectId()
 
-    carDB = await CarDB.find_one(
+    carDB: Union[CarDB, None] = await CarDB.find_one(
         CarDB.name_en == car.name_en,
         fetch_links=True,
     )

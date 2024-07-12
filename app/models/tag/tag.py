@@ -5,6 +5,7 @@ from typing import List, Optional, Literal
 from app.models.i18n import i18n
 from app.types.http import Url
 from .kind import TagKind
+from pprint import pprint
 
 __all__ = ["Tag", "TagName", "TagDescription", "dbInit"]
 
@@ -70,15 +71,40 @@ class Tag(Document):
 
     def to_front(self):
 
-        names = [n.model_dump(exclude=["id", "revision_id"]) for n in self.name]
-        descriptions = [
-            d.model_dump(exclude=["id", "revision_id"]) for d in self.description
-        ]
+        names = [n.to_front() for n in self.name]
+        pprint(names)
+        descriptions = [d.to_front() for d in self.description]
         kind = self.kind.to_front()
 
         return {
             **self.model_dump(
-                exclude=["name", "description", "revision_id", "parentTag", "mergedTo"]
+                include=["id", "imageURL", "name_en", "parentTag", "mergedTo"]
+            ),
+            "name": names,
+            "description": descriptions,
+            "kind": kind,
+        }
+
+    def to_simple(self):
+        _partial = self.model_dump(
+            include=[
+                "id",
+                "imageURL",
+                "name",
+                "name_en",
+                "description",
+                "parentTag",
+                "childrenTag",
+            ]
+        )
+
+        names = [n.to_front() for n in self.name]
+        descriptions = [d.to_front() for d in self.description]
+        kind = self.kind.to_simple()
+
+        return {
+            **self.model_dump(
+                include=["id", "imageURL", "name_en", "parentTag", "mergedTo"]
             ),
             "name": names,
             "description": descriptions,

@@ -50,6 +50,9 @@ class i18n(Document):
 
         return result
 
+    def to_front(self):
+        return self.model_dump(include=["value", "lang"])
+
     class Settings:
         is_root = True
 

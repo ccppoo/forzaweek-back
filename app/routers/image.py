@@ -40,7 +40,7 @@ class ImageURLRequest(BaseModel):
 async def add_nation_flag(folder: str, file: UploadFile):
     # TODO: 파일 업로드하고 사용 안된 임시파일 삭제하기
 
-    temp_image_allow = ["nation", "manufacturer", "car", "tagkind"]
+    temp_image_allow = ["nation", "manufacturer", "car", "tagkind", "decal"]
 
     requestedImage = await file.read()
 

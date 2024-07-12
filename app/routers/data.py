@@ -45,5 +45,6 @@ async def get_data_status() -> DataStatus:
         decal=decal_count,
         tag=tag_count,
         tagkind=tagkind_count,
+        tuning=tuning_count,
     )
     return dataStatus

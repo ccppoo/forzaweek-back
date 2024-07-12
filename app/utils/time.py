@@ -1,4 +1,4 @@
-from datetime import datetime, timezone
+from datetime import datetime, timezone, UTC
 from enum import Enum
 
 
@@ -8,7 +8,7 @@ class Datetime_Format(str, Enum):
 
 
 def datetime_utc() -> datetime:
-    return datetime.now(tz=timezone.utc)
+    return datetime.now(UTC)
 
 
 def timestamp_utc_ms() -> int:
