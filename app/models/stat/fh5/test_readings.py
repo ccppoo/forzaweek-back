@@ -13,6 +13,6 @@ class TestReadings(BaseModel):
     maxspeed: testReadingValue
     zero100: testReadingValue
     output: testReadingValue
-    tork: testReadingValue
+    torque: testReadingValue
     weight: testReadingValue
     skid_pad: testReadingValue

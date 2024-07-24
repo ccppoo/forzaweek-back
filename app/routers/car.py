@@ -97,7 +97,7 @@ async def add_car(car: CarCreate):
     )
 
     # 1. 이미 존재하는 차
-    if carDB:
+    if carDB is not None:
         return
     # 2. 제조사 확인
     manufacturer = await ManufacturerDB.get(car.manufacturer)

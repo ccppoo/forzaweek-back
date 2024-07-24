@@ -27,7 +27,7 @@ class TuningCreate(BaseModel):
     performance: Performance  # 필수
     testReadings: TestReadings  # 필수
     tuningMajorParts: MajorParts  # 필수
-    detailedTuning: Optional[DetailedTunings]  # 필수 아님
+    detailedTuning: Optional[DetailedTunings] = Field(default=None)  # 필수 아님
 
 
 @tuningRouter.get("")
@@ -52,6 +52,7 @@ async def get_tuning(tuningID: str):
 @tuningRouter.post("")
 async def create_tuning(tuning: TuningCreate):
     pprint(tuning)
+    return 200
 
     # 1. 차 ID 확인 -> Link로 저장하기 위해서
     car = await CarDB.get(tuning.car)

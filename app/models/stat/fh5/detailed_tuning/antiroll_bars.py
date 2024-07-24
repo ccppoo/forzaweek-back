@@ -7,11 +7,12 @@ from typing import Literal, List
 __all__ = ("AntirollBars",)
 
 
-class AntirollBarPSI(BaseModel):
+class AntirollBarPressure(BaseModel):
     # PSI
     front: float = Field(ge=0, le=100)
     rear: float = Field(ge=0, le=100)
+    unit: str
 
 
 class AntirollBars(BaseModel):
-    antirollBar: AntirollBarPSI
+    antirollBars: AntirollBarPressure

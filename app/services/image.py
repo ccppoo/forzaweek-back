@@ -12,6 +12,7 @@ def resolve_temp_image(
 ) -> Union[Url, None]:
 
     base_dir = runtimeSettings.TEMPFILE_BASE_DIR
+    new_name_ = new_name.replace(" ", "_")
 
     fname_temp = pathlib.Path(base_dir, "uploads", folder, temp_image).resolve()
 
@@ -20,8 +21,9 @@ def resolve_temp_image(
         return None
 
     # 업로드할 이미지 이름 재수정
-    new_filename = f"{new_name}{fname_temp.suffix}"
-    resolved_key = "/".join([folder, *paths, new_filename])
+    new_filename = f"{new_name_}{fname_temp.suffix}"
+    paths_ = [p.replace(" ", "_") for p in paths]
+    resolved_key = "/".join([folder, *paths_, new_filename])
 
     CONTENT_TYPE = None
     if fname_temp.suffix.endswith("svg"):

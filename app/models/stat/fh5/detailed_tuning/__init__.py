@@ -20,12 +20,12 @@ class DetailedTunings(BaseModel):
     NOTE: 튜닝마다 활성화된 옵션이 모두 다르고, 입력을 안할 수 있으므로 모두 Optional로 설정
     """
 
-    tiers: Optional[Tiers]
-    gearing: Optional[Gearing]
-    alignment: Optional[Alignment]
-    antirollBars: Optional[AntirollBars]
-    springs: Optional[Springs]
-    damping: Optional[Damping]
-    aero: Optional[Aero]
-    brake: Optional[Brake]
-    diffrential: Optional[Differntial]
+    tires: Optional[Tiers] = Field(default=None)
+    gearing: Optional[Gearing] = Field(default=None)
+    alignment: Optional[Alignment] = Field(default=None)
+    antirollBars: Optional[AntirollBars] = Field(default=None)
+    springs: Optional[Springs] = Field(default=None)
+    damping: Optional[Damping] = Field(default=None)
+    aero: Optional[Aero] = Field(default=None)
+    brake: Optional[Brake] = Field(default=None)
+    diffrential: Optional[Differntial] = Field(default=None)

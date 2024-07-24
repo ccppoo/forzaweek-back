@@ -16,10 +16,18 @@ class TrackName(i18n):
     pass
 
 
+class TrackLiberalTranslation(i18n):
+    # value : str
+    # lang: str
+    pass
+
+
 class TrackBase(Document):
     """Track DB representation."""
 
     name: List[Link[TrackName]]
+    name_en: str
+    liberal_translation: List[Link[TrackLiberalTranslation]]
     tag: List[Link[Tag]] = Field(default=[])
     world: str  # DLC 지역과 기본 지역 구분
 
