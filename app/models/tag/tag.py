@@ -111,6 +111,19 @@ class Tag(Document):
             "kind": kind,
         }
 
+    def to_front_simple(self):
+
+        names = {n.lang: n.value for n in self.name}
+        descriptions = {d.lang: d.value for d in self.description}
+        kind = self.kind.to_front_simple()
+
+        return {
+            **self.model_dump(include=["id", "imageURL", "name_en"]),
+            "name": names,
+            "description": descriptions,
+            "kind": kind,
+        }
+
     # @field_validator("childrenTag")
     # @classmethod
     # def validate_childrenTag(cls, v):

@@ -48,6 +48,11 @@ class TagKind(Document):
         _name = [n.to_front() for n in self.name]
         return {**_partial, "name": _name}
 
+    def to_front_simple(self):
+        _partial = self.model_dump(include=["id", "imageURL", "name_en"])
+        _name = {n.lang: n.value for n in self.name}
+        return {**_partial, "name": _name}
+
     class Settings:
         name: str = "tagKind"
         use_state_management = True

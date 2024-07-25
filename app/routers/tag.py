@@ -62,7 +62,7 @@ async def get_tag_by_id(tagID: str, kind: Optional[str] = None):
 
     tag = await TagDB.get(tagID, fetch_links=True)
 
-    return tag.to_front()
+    return tag.to_front_simple()
 
 
 @router.get("/search/a")

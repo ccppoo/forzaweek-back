@@ -15,7 +15,7 @@ from app.models.car import (
     CarName,
     CarShortName,
 )
-
+from app.models.track.fh5 import Track_FH5
 
 from app.models.car import Car as CarDB
 from app.models.manufacturer import Manufacturer as ManufacturerDB
@@ -98,4 +98,25 @@ async def get_manufacturer_db():
 
     a = [manufacturer.to_indexedDB() for manufacturer in manufacturers]
     utc_ms = timestamp_utc_ms()
+    return {"version": f"{utc_ms}", "lastUpdate": utc_ms, "data": a}
+
+
+@router.get("/track2")
+async def get_track_db():
+    tracks = await Track_FH5.find_all().to_list()
+    [await t.fetch_all_links() for t in tracks]
+    a = [t.to_indexedDB() for t in tracks]
+    utc_ms = timestamp_utc_ms()
+
+    return {"version": f"{utc_ms}", "lastUpdate": utc_ms, "data": a}
+
+
+@router.get("/track2/image")
+async def get_track_image_db():
+
+    tracks = await Track_FH5.find_all().to_list()
+    [await t.fetch_all_links() for t in tracks]
+    a = [t.to_indexedDB_image() for t in tracks]
+    utc_ms = timestamp_utc_ms()
+
     return {"version": f"{utc_ms}", "lastUpdate": utc_ms, "data": a}
