@@ -40,6 +40,7 @@ app.include_router(tagRouter)
 app.include_router(indexedDBRouter)
 app.include_router(tagKindRouter)
 app.include_router(FH5Router)
+app.include_router(AuthRouter)
 # websocket
 app.include_router(stateManageRouter)
 

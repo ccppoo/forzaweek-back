@@ -1,5 +1,6 @@
-from pydantic import Field, RedisDsn, BaseModel
+from pydantic import Field, RedisDsn, BaseModel, field_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
+from typing import List
 from argparser import args
 import urllib.parse
 
@@ -125,24 +126,32 @@ class _RedisSettings(BaseSettings):
         return _uri
 
 
-class GoogleOAuth(BaseModel):
+class XBoxOAuth(BaseSettings):
     CLIENT_ID: str | None
     CLIENT_SECRET: str | None
+    REDIRECT_URI: str | None
+    SCOPES: str | None
+    OAUTH_ALGORITHMS: List[str] | None
+    OAUTH_AUDIENCE: List[str] | None
+    TOKEN_ISSUER: str | None
 
-
-class _OAuthSettings(BaseSettings):
-    google: GoogleOAuth
-
-    ## Pydantic V2
     model_config = SettingsConfigDict(
-        title="oauth env config",
+        title="xbox oauth env config",
         env_file=ENV_FILE,
         env_file_encoding="utf-8",
         extra="ignore",
-        env_prefix="OAUTH_",
+        env_prefix="AZURE_XBOX_",
         env_nested_delimiter="__",
         case_sensitive=False,
     )
+
+    @field_validator("OAUTH_ALGORITHMS", "OAUTH_AUDIENCE", mode="before")
+    def set_algorithms(cls, v: str) -> List[str]:
+        return [x for x in [v.strip() for v in v.split(",")] if x]
+
+
+class _OAuthSettings(BaseSettings):
+    xbox: XBoxOAuth = Field(default_factory=XBoxOAuth)
 
 
 dbSettings = _DatabaseSettings()
