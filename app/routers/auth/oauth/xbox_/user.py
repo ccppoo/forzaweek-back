@@ -52,8 +52,9 @@ class XBoxLiveUser:
     authorization_code: Optional[str] = Field(default=None)
     # 아래는 나중에 초기화
     oauth2: Optional[OAuth2TokenResponse] = Field(default=None)
-    # Xbox-Achievement-Unlocker
-    user_token: Optional[XAUResponse] = Field(default=None)
+    # Xbox-Achievement-Unlocker => 이게 있어야 XBox API로 접근 가능
+    user_token: Optional[XAUResponse] = Field(default=None)  #
+    # XSTS, gatekeeper for Xbox LIVE. Xbox Live Authentication Token
     xsts_token: Optional[XSTSResponse] = Field(default=None)
 
     def __init__(self, authorization_code: str) -> None:
@@ -114,7 +115,7 @@ class XBoxLiveUser:
                 "https://login.live.com/oauth20_token.srf", data=data
             ) as response:
                 _json = await response.json()
-                pprint(_json)
+                # pprint(_json)
                 return OAuth2TokenResponse(**_json)
 
     async def request_user_token(

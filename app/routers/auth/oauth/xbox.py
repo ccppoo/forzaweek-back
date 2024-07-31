@@ -47,8 +47,6 @@ class XBoxLiveManager:
         )
 
 
-print(f"{oauthSettings.xbox.SCOPES=}")
-
 xboxManager = XBoxLiveManager(
     client_id=oauthSettings.xbox.CLIENT_ID,
     client_secret=oauthSettings.xbox.CLIENT_SECRET,
@@ -72,6 +70,8 @@ async def auth_callback(payload: CallbackPayload):
     # NOTE: 나중에 정리되면 XBoxLiveUser에서 OAuth만 불러오고 사용자가
     # xbox 정보, 친구 목록 새로고침 요청할 때 받아서 갱신하면 됨
     # 로그인 되어 있는 동안 token_refresh는 프런트에서 알아서
+    from pprint import pprint
+
     await user.init_user()
     # print("로그인 성공")
-    return user.oauth2.id_token  # JWT
+    return user.oauth2.model_dump(exclude=["user_id"])  # JWT
