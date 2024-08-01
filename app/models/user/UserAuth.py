@@ -4,7 +4,7 @@ from datetime import datetime
 from typing import Optional, Literal, Annotated
 from app.utils.time import datetime_utc
 from app.utils.hash import user_uuid
-from app.models.user.sso.microsoft import MircrosoftUserInfo
+from app.models.user.sso.microsoft import MircrosoftUserInfo, XboxUserInfo
 from beanie import Document, Link, Indexed
 import pymongo
 
@@ -12,6 +12,7 @@ import pymongo
 class OAuthSolutions(BaseModel):
 
     microsoft: Optional[MircrosoftUserInfo] = Field(default=None)
+    xbox: Optional[XboxUserInfo] = Field(default=None)
 
 
 OAUTH_PROVIDERS = [
