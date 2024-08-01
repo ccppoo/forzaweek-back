@@ -41,6 +41,8 @@ app.include_router(indexedDBRouter)
 app.include_router(tagKindRouter)
 app.include_router(FH5Router)
 app.include_router(AuthRouter)
+# NOTE: remove dev router when release
+app.include_router(devRouter)
 # websocket
 app.include_router(stateManageRouter)
 
