@@ -87,6 +87,7 @@ class _SecuritySettings(BaseSettings):
     TOKEN_LIFETIME: int = Field(gt=600)
     RESET_SECRET: str = Field(min_length=5)
     RESET_LIFETIME: int = Field(gt=300)
+    UID_GEN_SALT: str
 
     ## Pydantic V2
     model_config = SettingsConfigDict(
