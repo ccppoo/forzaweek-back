@@ -10,3 +10,4 @@ from .tagkind import router as tagKindRouter
 from .fh5 import router as FH5Router
 from .auth import router as AuthRouter
 from .dev import router as devRouter
+from .user import router as userRouter

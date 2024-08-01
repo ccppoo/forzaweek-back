@@ -4,7 +4,7 @@ from xbox.webapi.common.exceptions import AuthenticationException
 import aiohttp
 from pprint import pprint
 from .profile import XboxProfile
-from xbox.webapi.api.provider.profile.models import ProfileResponse, ProfileSettings
+from xbox.webapi.api.provider.profile.models import ProfileSettings
 from datetime import datetime, timedelta, timezone
 from xbox.webapi.authentication.models import (
     XAUResponse,
@@ -42,6 +42,41 @@ class OAuth2TokenResponse(BaseModel):
 
     def is_valid(self) -> bool:
         return (self.issued + timedelta(seconds=self.expires_in)) > utc_now()
+
+
+class Setting(BaseModel):
+    id: str
+    value: str
+
+
+class ProfileUser(BaseModel):
+    id: str
+    hostId: str
+    settings: List[Setting]
+    isSponsoredUser: bool
+
+    @property
+    def GameDisplayName(self) -> str | None:
+
+        return self._getSettings("GameDisplayName")
+
+    @property
+    def PublicGamerpic(self) -> str | None:
+        return self._getSettings("PublicGamerpic")
+
+    @property
+    def PreferredColor(self) -> str | None:
+        return self._getSettings("PreferredColor")
+
+    def _getSettings(self, name: str) -> str | None:
+        for setting in self.settings:
+            if setting.id == name:
+                return setting.value
+        return None
+
+
+class ProfileResponse(BaseModel):
+    profileUsers: List[ProfileUser]
 
 
 class XBoxLiveUser:
@@ -207,3 +242,29 @@ class XBoxLiveUser:
             ) as response:
                 _json = await response.json()
                 return ProfileResponse(**_json)
+
+    async def get_profile_min(self) -> ProfileUser:
+        PROFILE_URL = "https://profile.xboxlive.com"
+        url = PROFILE_URL + f"/users/xuid({self.xuid})/profile/settings"
+        HEADERS_PROFILE = {
+            "x-xbl-contract-version": "3",
+            "Authorization": self.xsts_token.authorization_header_value,
+        }
+        SEPARATOR = ","
+
+        params = {
+            "settings": SEPARATOR.join(
+                [
+                    ProfileSettings.GAME_DISPLAY_NAME,
+                    ProfileSettings.PUBLIC_GAMERPIC,
+                    ProfileSettings.PREFERRED_COLOR,
+                ]
+            ),
+        }
+
+        async with aiohttp.ClientSession() as session:
+            async with session.get(
+                url, params=params, headers=HEADERS_PROFILE
+            ) as response:
+                _json = await response.json()
+                return ProfileResponse(**_json).profileUsers[0]
