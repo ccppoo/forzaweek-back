@@ -8,6 +8,10 @@ temp.*
 # etc
 tiled/
 
+# keys, secret
+keys/*
+!keys/*.md
+
 # local test
 /ssl
 *.pem
