@@ -1,11 +1,15 @@
 from fastapi import APIRouter
 
 from pydantic import BaseModel, Field
-import httpx
 from typing import Optional, List
-from .xbox_ import XboxProfile, XBoxLiveUser
+from .xbox_ import XBoxAuthEndpointProvider, XboxProfile, XBoxLiveUser
 from app.configs import oauthSettings
-
+from app.services.auth.validate import read_jwt_payload
+from app.types.auth.jwt import MicrosoftJWTPayload
+from app.models.user.sso.microsoft import MircrosoftUserInfo, XboxUserInfo
+from app.models.user.UserAuth import UserAuth
+from app.utils.hash import gen_user_uuid
+from app.utils.time import datetime_utc
 
 router = APIRouter(prefix="/xbox", tags=["xbox"])
 
@@ -14,40 +18,7 @@ class CallbackPayload(BaseModel):
     code: str
 
 
-class XBoxLiveManager:
-
-    def __init__(
-        self,
-        client_id: str,
-        client_secret: str,
-        redirect_uri: str,
-        scopes: str,
-    ):
-        self._client_id: str = client_id
-        self._client_secret: str = client_secret
-        self._redirect_uri: str = redirect_uri
-        self._scopes: str = scopes
-
-    def generate_authorization_url(self, state: Optional[str] = None) -> str:
-        query_params = {
-            "client_id": self._client_id,
-            "response_type": "code",
-            "approval_prompt": "auto",
-            "scope": self._scopes,
-            "redirect_uri": self._redirect_uri,
-        }
-
-        if state:
-            query_params["state"] = state
-
-        return str(
-            httpx.URL(
-                "https://login.live.com/oauth20_authorize.srf", params=query_params
-            )
-        )
-
-
-xboxManager = XBoxLiveManager(
+xBoxAuthEndpointProvider = XBoxAuthEndpointProvider(
     client_id=oauthSettings.xbox.CLIENT_ID,
     client_secret=oauthSettings.xbox.CLIENT_SECRET,
     redirect_uri=oauthSettings.xbox.REDIRECT_URI,
@@ -58,7 +29,7 @@ xboxManager = XBoxLiveManager(
 @router.get("/login")
 async def auth_init():
     """Initialize auth and redirect"""
-    url = xboxManager.generate_authorization_url()
+    url = xBoxAuthEndpointProvider.generate_authorization_url()
 
     return {"redirectTo": url}
 
@@ -70,8 +41,30 @@ async def auth_callback(payload: CallbackPayload):
     # NOTE: 나중에 정리되면 XBoxLiveUser에서 OAuth만 불러오고 사용자가
     # xbox 정보, 친구 목록 새로고침 요청할 때 받아서 갱신하면 됨
     # 로그인 되어 있는 동안 token_refresh는 프런트에서 알아서
-    from pprint import pprint
 
     await user.init_user()
-    # print("로그인 성공")
+
+    _ms_token = read_jwt_payload(user.oauth2.id_token)
+    ms_token = MicrosoftJWTPayload(**_ms_token)
+
+    # 1. 이미 가입된 사용자인지 확인
+    _user = await UserAuth.find_oauth_MS(uid=ms_token.uid, email=ms_token.email)
+    if _user:
+        _user.last_login = datetime_utc()
+        await _user.save()
+        return user.oauth2.model_dump(exclude=["user_id"])  # JWT
+
+    # 2. 새로운 사용자의 경우 정보 저장 + Xbox 정보 가져와서 저장하기
+    _xbox = XboxUserInfo(
+        gamer_tag=user.xsts_token.gamertag,
+        user_hash=user.xsts_token.userhash,
+        xuid=user.xsts_token.xuid,
+    )
+    msUserInfo = MircrosoftUserInfo(uid=ms_token.uid, email=ms_token.email, xbox=_xbox)
+
+    _user_id = gen_user_uuid(uid=ms_token.uid, email=ms_token.email)
+    new_user = UserAuth(user_id=_user_id, oauth={"microsoft": msUserInfo})
+
+    await new_user.insert()
+
     return user.oauth2.model_dump(exclude=["user_id"])  # JWT

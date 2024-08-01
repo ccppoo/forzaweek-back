@@ -11,7 +11,7 @@ from xbox.webapi.authentication.models import (
     XSTSResponse,
 )
 from app.configs import oauthSettings
-from app.services.auth.validate import read_jwt
+from app.services.auth.validate import read_jwt_payload
 
 
 def utc_now():
@@ -32,7 +32,7 @@ class OAuth2TokenResponse(BaseModel):
     @classmethod
     def extract_jwt_values(cls, data):
         _jwt = data["id_token"]
-        jwt = read_jwt(_jwt)
+        jwt = read_jwt_payload(_jwt)
         if jwt is None:
             # TODO:  exception handling
             print("jwt 유효 ㄴㄴ")
@@ -76,7 +76,7 @@ class XBoxLiveUser:
         """Request all tokens."""
 
         self.oauth2 = await self.request_oauth_token()
-        self.user_token = await self.request_user_token()
+        self.xbox_user_token = await self.request_xbox_user_token()
         self.xsts_token = await self.request_xsts_token()
 
     async def request_oauth_token(self) -> OAuth2TokenResponse:
@@ -118,7 +118,7 @@ class XBoxLiveUser:
                 # pprint(_json)
                 return OAuth2TokenResponse(**_json)
 
-    async def request_user_token(
+    async def request_xbox_user_token(
         self,
         relying_party: str = "http://auth.xboxlive.com",
         use_compact_ticket: bool = False,
@@ -154,7 +154,7 @@ class XBoxLiveUser:
             "RelyingParty": relying_party,
             "TokenType": "JWT",
             "Properties": {
-                "UserTokens": [self.user_token.token],
+                "UserTokens": [self.xbox_user_token.token],
                 "SandboxId": "RETAIL",
             },
         }
