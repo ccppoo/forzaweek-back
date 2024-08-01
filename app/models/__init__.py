@@ -7,6 +7,7 @@ from .dbState import dbInit as dbStateDBInit
 from .decal import dbInit as decalDBInit
 from .track import dbInit as trackDBInit
 from .tuning import dbInit as tuningDBInit
+from .user import dbInit as userDBInit
 
 __all__ = ["models"]
 
@@ -20,4 +21,5 @@ models = (
     *decalDBInit,
     *trackDBInit,
     *tuningDBInit,
+    *userDBInit,
 )
