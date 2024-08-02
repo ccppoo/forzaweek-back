@@ -3,6 +3,7 @@ from fastapi import APIRouter
 from pydantic import BaseModel, Field
 from typing import Optional, List
 from .xbox_ import XBoxAuthEndpointProvider, XboxProfile, XBoxLiveUser
+from .xbox_.user import OAuth2TokenResponse
 from app.configs import oauthSettings
 from app.services.auth.validate import read_jwt_payload
 from app.types.auth.jwt import MicrosoftJWTPayload
@@ -10,12 +11,17 @@ from app.models.user.sso.microsoft import MircrosoftUserInfo, XboxUserInfo
 from app.models.user.UserAuth import UserAuth
 from app.utils.hash import gen_user_uuid
 from app.utils.time import datetime_utc
+import aiohttp
 
 router = APIRouter(prefix="/xbox", tags=["xbox"])
 
 
 class CallbackPayload(BaseModel):
     code: str
+
+
+class RefreshTokenPayload(BaseModel):
+    refreshToken: str
 
 
 xBoxAuthEndpointProvider = XBoxAuthEndpointProvider(
@@ -26,12 +32,41 @@ xBoxAuthEndpointProvider = XBoxAuthEndpointProvider(
 )
 
 
+async def _oauth2_token_request(refresh_token: str) -> OAuth2TokenResponse:
+    """Execute token requests."""
+    data = {
+        "grant_type": "refresh_token",
+        "scope": oauthSettings.xbox.SCOPES,
+        "refresh_token": refresh_token,
+        "client_id": oauthSettings.xbox.CLIENT_ID,
+        "client_secret": oauthSettings.xbox.CLIENT_SECRET,
+    }
+
+    async with aiohttp.ClientSession() as session:
+        async with session.post(
+            "https://login.live.com/oauth20_token.srf", data=data
+        ) as response:
+            _json = await response.json()
+            # pprint(_json)
+            return OAuth2TokenResponse(**_json)
+
+
 @router.get("/login")
 async def auth_init():
     """Initialize auth and redirect"""
     url = xBoxAuthEndpointProvider.generate_authorization_url()
 
     return {"redirectTo": url}
+
+
+@router.post("/refresh")
+async def token_refresh(token: RefreshTokenPayload):
+    """return new token"""
+    print(token)
+
+    new_token = await _oauth2_token_request(token.refreshToken)
+
+    return new_token
 
 
 @router.post("/callback")

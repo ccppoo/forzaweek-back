@@ -126,18 +126,18 @@ class XBoxLiveUser:
             }
         )
 
-    # 로그인 이후 oauth_token refresh는 클라이언트 쪽이 알아서 하는거
-    # async def refresh_oauth_token(
-    #     self,
-    # ) -> OAuth2TokenResponse:
-    #     """Refresh OAuth2 token."""
-    #     return await self._oauth2_token_request(
-    #         {
-    #             "grant_type": "refresh_token",
-    #             "scope": XBoxLiveUser.SCOPE,
-    #             "refresh_token": self.oauth2.refresh_token,
-    #         }
-    #     )
+    # 로그인 이후 oauth_token refresh는 클라이언트 쪽이 요청보내면 해주고 반환해주기
+    async def refresh_oauth_token(
+        self,
+    ) -> OAuth2TokenResponse:
+        """Refresh OAuth2 token."""
+        return await self._oauth2_token_request(
+            {
+                "grant_type": "refresh_token",
+                "scope": XBoxLiveUser.SCOPE,
+                "refresh_token": self.oauth2.refresh_token,
+            }
+        )
 
     async def _oauth2_token_request(self, data: dict) -> OAuth2TokenResponse:
         """Execute token requests."""

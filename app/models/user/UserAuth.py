@@ -43,9 +43,20 @@ class UserAuth(Document):
         uid: str,
         email: str,
     ) -> UserAuth | None:
+        """
+        find user by data revoked from id_token(JWT)
+        """
         user = await UserAuth.find_one(
             UserAuth.oauth.microsoft.email == email, UserAuth.oauth.microsoft.uid == uid
         )
+        return user
+
+    @staticmethod
+    async def find_user_by_user_id(*, user_id: str) -> UserAuth | None:
+        """
+        find user by public exposed user id (UUID)
+        """
+        user = await UserAuth.find_one(UserAuth.user_id == user_id)
         return user
 
     class Settings:

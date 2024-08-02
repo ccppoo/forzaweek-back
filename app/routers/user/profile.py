@@ -1,19 +1,24 @@
 from fastapi import APIRouter, Depends
 from typing import Annotated
 from app.models.user.UserAuth import UserAuth
-from app.services.auth.deps import get_current_active_user
+from app.services.auth.deps import get_current_active_user, optional_auth_dependent
 
 __all__ = ("router",)
 
 router = APIRouter(prefix="/profile", tags=["auth"])
 
 
-@router.get("")
+@router.get("/{userID}")
 async def get_user_profile(
-    current_user: Annotated[UserAuth, Depends(get_current_active_user)]
+    userID: str,
 ):
 
-    return {
-        "gamerTag": current_user.oauth.xbox.gamer_tag,
-        "profileImage": current_user.oauth.xbox.profile_image,
-    }
+    user = await UserAuth.find_user_by_user_id(user_id=userID)
+    if user:
+
+        data = {
+            "gamerTag": user.oauth.xbox.gamer_tag,
+            "profileImage": user.oauth.xbox.profile_image,
+        }
+        return data
+    return "no user"
