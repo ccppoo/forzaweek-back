@@ -11,3 +11,4 @@ from .fh5 import router as FH5Router
 from .auth import router as AuthRouter
 from .dev import router as devRouter
 from .user import router as userRouter
+from .comment import router as commentRouter
