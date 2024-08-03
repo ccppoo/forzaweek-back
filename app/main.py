@@ -42,6 +42,7 @@ app.include_router(tagKindRouter)
 app.include_router(FH5Router)
 app.include_router(AuthRouter)
 app.include_router(userRouter)
+app.include_router(commentRouter)
 # NOTE: remove dev router when release
 app.include_router(devRouter)
 # websocket

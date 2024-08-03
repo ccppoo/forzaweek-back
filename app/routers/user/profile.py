@@ -1,7 +1,7 @@
 from fastapi import APIRouter, Depends
 from typing import Annotated
 from app.models.user.UserAuth import UserAuth
-from app.services.auth.deps import get_current_active_user, optional_auth_dependent
+from app.services.auth.deps import get_current_active_user
 
 __all__ = ("router",)
 
