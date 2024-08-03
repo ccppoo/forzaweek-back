@@ -8,6 +8,7 @@ from .decal import dbInit as decalDBInit
 from .track import dbInit as trackDBInit
 from .tuning import dbInit as tuningDBInit
 from .user import dbInit as userDBInit
+from .comment import dbInit as commentDBInit
 
 __all__ = ["models"]
 
@@ -22,4 +23,5 @@ models = (
     *trackDBInit,
     *tuningDBInit,
     *userDBInit,
+    *commentDBInit,
 )
