@@ -8,13 +8,15 @@ __all__ = (
     "CommentBase",
     "TagableComment",
     "VotableComment",
+    "VotableMainComment",
 )
 
 dbInit = (
     CommentsBase,
-    VotableComments,
-    TaggableComments,
     CommentBase,
+    TaggableComments,
     TaggableComment,
+    VotableComments,
+    VotableMainComment,
     VotableComment,
 )

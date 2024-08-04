@@ -13,8 +13,6 @@ __all__ = (
     "TaggableComments",
 )
 
-T = TypeVar("T")
-
 
 class CommentsBase(Document):
     """Comments DB representation."""
@@ -41,12 +39,23 @@ class VotableComments(CommentsBase):
     async def sorted_by_up_vote():
         pass
 
+    def to_front(self, page: int, limit: int, order: str):
+        # 반드시 fetch link 이후에 호출할 것
+        comments_parsed = [c.to_front() for c in self.comments]
+        return comments_parsed
+
+    def get_id_by(self, page: int, limit: int, order: str):
+        # 조건에 만족하는 댓글 ID 프런트로 보내는 것
+        comment_ids = [str(c.id) for c in self.comments]
+        # TODO: 쿼리 조건에 만족하는 document ID 보내기
+        return {"comments": comment_ids}
+
     class Settings:
-        pass
+        use_state_management = True
 
 
 class TaggableComments(CommentsBase):
     comments: List[Link[TaggableComment]] = Field(default=[])
 
     class Settings:
-        pass
+        use_state_management = True
