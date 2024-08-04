@@ -8,6 +8,18 @@ __all__ = ("router",)
 router = APIRouter(prefix="/profile", tags=["auth"])
 
 
+@router.get("")
+async def get_profile(
+    current_user: Annotated[UserAuth, Depends(get_current_active_user)],
+):
+
+    data = {
+        "gamerTag": current_user.oauth.xbox.gamer_tag,
+        "profileImage": current_user.oauth.xbox.profile_image,
+    }
+    return data
+
+
 @router.get("/{userID}")
 async def get_user_profile(
     userID: str,
