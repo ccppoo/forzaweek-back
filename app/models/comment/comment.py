@@ -12,7 +12,7 @@ from beanie.odm.fields import PydanticObjectId
 __all__ = (
     "CommentBase",
     "TaggableComment",
-    "VotableComment",
+    "VotableSubComment",
     "VotableMainComment",
 )
 
@@ -20,9 +20,8 @@ __all__ = (
 class CommentBase(Document):
 
     subject_to: PydanticObjectId  # comments가 속한 원본 글 (Car, tuning, decal, ... )
-    comments_parent: (
-        PydanticObjectId  # Comments (VotableComments, TaggableComments, 등) ID
-    )
+    # Comment의 경우 -> Comments, Subcomment의 경우 Comment
+    parent: PydanticObjectId
 
     creator: Link[UserAuth]  # 댓글 쓴 사람 UID
     value: str  # 댓글 내용
@@ -39,6 +38,20 @@ class TaggableComment(CommentBase, Tagable):
 
     # tags: List[Link[Tag]] = Field(default=[])
 
+    def to_front(self):
+
+        tags = [str(t.id) for t in self.tags]
+
+        return {
+            "creator": self.creator.user_id,
+            "subject_to": str(self.subject_to),
+            "parent": str(self.parent),
+            "value": self.value,
+            "created_at": self.created_at,
+            "modified_at": self.modified_at,
+            "tags": tags,
+        }
+
     async def add_tag(self):
         self.tags
         return
@@ -50,7 +63,8 @@ class TaggableComment(CommentBase, Tagable):
         use_state_management = True
 
 
-class VotableComment(CommentBase, Votable):
+class VotableSubComment(CommentBase, Votable):
+
     def to_front(self):
         # 반드시 fetch link 이후에 호출할 것
         # 프런트로만 보낼 것들
@@ -72,7 +86,7 @@ class VotableComment(CommentBase, Votable):
         use_state_management = True
 
 
-class VotableMainComment(CommentBase, Votable, Replyable[VotableComment]):
+class VotableMainComment(CommentBase, Votable, Replyable[VotableSubComment]):
     # 래딧처럼 일반 게시물 쓸 때 개추/비추 기능 추가하는 것
     # car, decal, track, tunning, ... 창작물 게시하는 글 말고 일반 게시물(자유게시판, 등)
 
@@ -96,7 +110,9 @@ class VotableMainComment(CommentBase, Votable, Replyable[VotableComment]):
             "up_votes": len(self.up_voters),
             "down_votes": len(self.down_voters),
         }
-        subs = [sc.to_front() for sc in self.subComments]
+        # subs = [sc.to_front() for sc in self.subComments]
+        # Link.to_ref
+        subs = [str(sc.to_ref().id) for sc in self.subComments]
         return {**data, "subComments": subs}
 
     async def add_subcomment(self):

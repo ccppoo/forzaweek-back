@@ -3,7 +3,7 @@ from typing import Any, List, Generic, TypeVar
 from beanie import Document, Link
 from pydantic import BaseModel, Field
 from beanie.odm.fields import PydanticObjectId
-from .comment import VotableComment, TaggableComment
+from .comment import VotableSubComment, TaggableComment, VotableMainComment
 from app.utils.time import datetime_utc
 
 
@@ -33,7 +33,7 @@ class CommentsBase(Document):
 
 
 class VotableComments(CommentsBase):
-    comments: List[Link[VotableComment]] = Field(default=[])
+    comments: List[Link[VotableMainComment]] = Field(default=[])
 
     # 이런거 등등
     async def sorted_by_up_vote():
@@ -56,6 +56,12 @@ class VotableComments(CommentsBase):
 
 class TaggableComments(CommentsBase):
     comments: List[Link[TaggableComment]] = Field(default=[])
+
+    def get_id_by(self, page: int, limit: int, order: str):
+        # 조건에 만족하는 댓글 ID 프런트로 보내는 것
+        comment_ids = [str(c.to_ref().id) for c in self.comments]
+        # TODO: 쿼리 조건에 만족하는 document ID 보내기
+        return {"comments": comment_ids}
 
     class Settings:
         use_state_management = True
