@@ -65,13 +65,20 @@ class TaggableComment(CommentBase, Tagable):
 
 class VotableSubComment(CommentBase, Votable):
 
-    def to_front(self):
+    def to_front(self, user: UserAuth | None = None):
         # 반드시 fetch link 이후에 호출할 것
         # 프런트로만 보낼 것들
         # {
         #     "gamer_tag": self.creator.oauth.xbox.gamer_tag,
         #     "profile_image": self.creator.oauth.xbox.profile_image,
         # }
+
+        voted = {"up": [], "down": []}
+        if user:
+            if user.user_id in self.up_voters:
+                voted["up"].append(user.user_id)
+            if user.user_id in self.down_voters:
+                voted["down"].append(user.user_id)
         data = {
             "creator": self.creator.user_id,
             "value": self.value,
@@ -79,8 +86,43 @@ class VotableSubComment(CommentBase, Votable):
             "modified_at": self.modified_at,
             "up_votes": len(self.up_voters),
             "down_votes": len(self.down_voters),
+            "voted": voted,
         }
         return data
+
+    async def up_vote(self, user_id: str):
+        if user_id in self.up_voters:
+            try:
+                self.up_voters.remove(user_id)
+                await self.save_changes()
+            except:
+                pass
+            return
+        if user_id in self.down_voters:
+            try:
+                self.down_voters.remove(user_id)
+            except:
+                return
+        self.up_voters.append(user_id)
+        await self.save_changes()
+        return
+
+    async def down_vote(self, user_id: str):
+        if user_id in self.down_voters:
+            try:
+                self.down_voters.remove(user_id)
+                await self.save_changes()
+            except:
+                pass
+            return
+        if user_id in self.up_voters:
+            try:
+                self.up_voters.remove(user_id)
+            except:
+                return
+        self.down_voters.append(user_id)
+        await self.save_changes()
+        return
 
     class Settings:
         use_state_management = True
@@ -95,13 +137,15 @@ class VotableMainComment(CommentBase, Votable, Replyable[VotableSubComment]):
 
     # subComments: List[Link[VotableComment]] = Field(default=[])
 
-    def to_front(self):
+    def to_front(self, user: UserAuth | None = None):
         # 반드시 fetch link 이후에 호출할 것
-        # 프런트로만 보낼 것들
-        # {
-        #     "gamer_tag": self.creator.oauth.xbox.gamer_tag,
-        #     "profile_image": self.creator.oauth.xbox.profile_image,
-        # }
+        voted = {"up": [], "down": []}
+        if user:
+
+            if user.user_id in self.up_voters:
+                voted["up"].append(user.user_id)
+            if user.user_id in self.down_voters:
+                voted["down"].append(user.user_id)
         data = {
             "creator": self.creator.user_id,
             "value": self.value,
@@ -109,23 +153,48 @@ class VotableMainComment(CommentBase, Votable, Replyable[VotableSubComment]):
             "modified_at": self.modified_at,
             "up_votes": len(self.up_voters),
             "down_votes": len(self.down_voters),
+            "voted": voted,
         }
-        # subs = [sc.to_front() for sc in self.subComments]
-        # Link.to_ref
         subs = [str(sc.to_ref().id) for sc in self.subComments]
         return {**data, "subComments": subs}
 
     async def add_subcomment(self):
         pass
 
-    async def up_vote(self, by: Url):
-        return await super().up_vote(by)
+    async def up_vote(self, user_id: str):
+        if user_id in self.up_voters:
+            try:
+                self.up_voters.remove(user_id)
+                await self.save_changes()
+                return
+            except:
+                return
+            return
+        if user_id in self.down_voters:
+            try:
+                self.down_voters.remove(user_id)
+            except:
+                return
+        self.up_voters.append(user_id)
+        await self.save_changes()
+        return
 
-    async def down_vote(self, by: Url):
-        return await super().down_vote(by)
-
-    async def cancel_vote(self, by: Url):
-        return await super().cancel_vote(by)
+    async def down_vote(self, user_id: str):
+        if user_id in self.down_voters:
+            try:
+                self.down_voters.remove(user_id)
+                await self.save_changes()
+            except:
+                pass
+            return
+        if user_id in self.up_voters:
+            try:
+                self.up_voters.remove(user_id)
+            except:
+                return
+        self.down_voters.append(user_id)
+        await self.save_changes()
+        return
 
     class Settings:
         use_state_management = True

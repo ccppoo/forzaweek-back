@@ -13,20 +13,16 @@ __all__ = ("Votable",)
 
 
 class Votable(BaseModel):
-    # 사용자 ID
-    up_voters: List[Link[UserAuth]] = Field(default=[])
-    down_voters: List[Link[UserAuth]] = Field(default=[])
+    # 사용자 user_id 로 저장
+    up_voters: List[str] = Field(default=[])
+    down_voters: List[str] = Field(default=[])
 
-    async def up_vote(self, by: str):
-        # down voter에 있을 경우 제거
+    async def up_vote(self, user_id: str):
+        # up voter에 있을 경우 제거
         # by - user ID
         assert NotImplementedError("Votable::up_vote not implemented")
 
-    async def cancel_vote(self, by: str):
-        pass
-        assert NotImplementedError("Votable::cancel_vote not implemented")
-
-    async def down_vote(self, by: str):
-        # up voter에 있을 경우 제거
+    async def down_vote(self, user_id: str):
+        # down voter에 있을 경우 제거
         # by - user ID
         assert NotImplementedError("Votable::down_vote not implemented")
