@@ -18,5 +18,6 @@ async def get_my_profile(
     data = {
         "gamerTag": current_user.oauth.xbox.gamer_tag,
         "profileImage": current_user.oauth.xbox.profile_image,
+        "userID": current_user.user_id,
     }
     return data

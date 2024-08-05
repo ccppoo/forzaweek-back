@@ -16,6 +16,7 @@ async def get_profile(
     data = {
         "gamerTag": current_user.oauth.xbox.gamer_tag,
         "profileImage": current_user.oauth.xbox.profile_image,
+        "userID": current_user.user_id,
     }
     return data
 
@@ -31,6 +32,7 @@ async def get_user_profile(
         data = {
             "gamerTag": user.oauth.xbox.gamer_tag,
             "profileImage": user.oauth.xbox.profile_image,
+            "userID": userID,
         }
         return data
     return "no user"
