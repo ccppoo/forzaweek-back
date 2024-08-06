@@ -7,7 +7,6 @@ from app.models.comment import (
     CommentsBase,
     CommentBase,
 )
-from app.models.car import Car
 from app.models.user import UserAuth
 from app.models.tag import Tag
 from fastapi import APIRouter, Depends, Query, Path
@@ -27,6 +26,9 @@ COMMENT_ORDER_DEFAULT = "date"
 
 class CommentsRequestParam(BaseModel):
     subject_id: str = Path(description="comment subjected to ")
+
+
+class CommentsPaginatedRequestParam(CommentsRequestParam):
     page: Optional[int] = Query(1, description="comment page")
     limit: Optional[int] = Query(
         COMMENT_LIMIT_DEFAULT, description="comment limit on page"
@@ -61,7 +63,7 @@ class SubCommentVoteRequestParam(CommentVoteRequestParam):
 
 @router.get("/{subject_id}")
 async def get_comment_from_subject_id(
-    options: CommentsRequestParam = Depends(),
+    options: CommentsPaginatedRequestParam = Depends(),
 ):
     # print()
     # pprint(options)
@@ -96,12 +98,6 @@ async def get_comment_from_subject_id(
     current_user: Annotated[UserAuth | None, Depends(get_optional_active_user)],
     options: CommentRequestParam = Depends(),
 ):
-    # print()
-    # pprint(options)
-    # print()
-    print()
-    print(f"current_user : {current_user}")
-    print()
     _subject_id = PydanticObjectId(options.subject_id)
     _comment_id = PydanticObjectId(options.comment_id)
 
@@ -125,9 +121,6 @@ async def get_comment_from_subject_id(
         await comments.fetch_link("creator")
         if comments:
             cmts = comments.to_front(current_user)
-            # print()
-            # pprint(cmts)
-            # print()
             return cmts  # 댓글 내용 전부 보내주는 거
             # return comments.model_dump()
             # return comments.get_id_by(page=1, limit=30, order="date")
@@ -140,10 +133,6 @@ async def vote_comment_from_subject_id(
     current_user: Annotated[UserAuth, Depends(get_current_active_user)],
     options: Annotated[CommentVoteRequestParam, Depends()],
 ):
-
-    # print()
-    # print(f"current_user : {current_user}")
-    # print()
     _subject_id = PydanticObjectId(options.subject_id)
     _comment_id = PydanticObjectId(options.comment_id)
 
@@ -205,9 +194,6 @@ async def vote_sub_comment_from_comment(
     current_user: Annotated[UserAuth, Depends(get_current_active_user)],
     options: Annotated[SubCommentVoteRequestParam, Depends()],
 ):
-    # print()
-    # pprint(options)
-    # print()
     _subject_id = PydanticObjectId(options.subject_id)
     _comment_id = PydanticObjectId(options.comment_id)
     _sub_comment_id = PydanticObjectId(options.sub_comment_id)
@@ -232,6 +218,51 @@ async def vote_sub_comment_from_comment(
             await subComment.down_vote(current_user.user_id)
 
     return
+
+
+@router.post("/{subject_id}")
+async def create_comment(options: Annotated[CommentsRequestParam, Depends()]):
+    pass
+
+
+@router.patch("/{subject_id}/{comment_id}")
+async def modify_comment(
+    current_user: Annotated[UserAuth, Depends(get_current_active_user)],
+    options: Annotated[CommentRequestParam, Depends()],
+):
+    pass
+
+
+@router.delete("/{subject_id}/{comment_id}")
+async def delete_comment(
+    current_user: Annotated[UserAuth, Depends(get_current_active_user)],
+    options: Annotated[CommentRequestParam, Depends()],
+):
+    pass
+
+
+@router.post("/{subject_id}/{comment_id}")
+async def create_sub_comment(
+    current_user: Annotated[UserAuth, Depends(get_current_active_user)],
+    options: Annotated[CommentRequestParam, Depends()],
+):
+    pass
+
+
+@router.patch("/{subject_id}/{comment_id}/{sub_comment_id}")
+async def modify_sub_comment(
+    current_user: Annotated[UserAuth, Depends(get_current_active_user)],
+    options: Annotated[SubCommentRequestParam, Depends()],
+):
+    pass
+
+
+@router.delete("/{subject_id}/{comment_id}/{sub_comment_id}")
+async def delete_sub_comment(
+    current_user: Annotated[UserAuth, Depends(get_current_active_user)],
+    options: Annotated[SubCommentRequestParam, Depends()],
+):
+    pass
 
 
 async def create_test_votable(subject_id: str):

@@ -32,12 +32,31 @@ def resolve_temp_image(
         CONTENT_TYPE = "webp"
     if fname_temp.suffix.endswith("png"):
         CONTENT_TYPE = "png"
+    if fname_temp.suffix.endswith("jpg"):
+        CONTENT_TYPE = "jpg"
+    # https://fzwcdn.forzaweek.com/board/board/test/1eac1219-bb82-4c47-b88e-9b5cc757d3fd.jpg
+    # ACL, CacheControl, ChecksumAlgorithm, ContentDisposition, ContentEncoding,
+    # ContentLanguage, ContentType, ExpectedBucketOwner, Expires,
+    # GrantFullControl, GrantRead, GrantReadACP, GrantWriteACP, Metadata,
+    # ObjectLockLegalHoldStatus, ObjectLockMode, ObjectLockRetainUntilDate,
+    # RequestPayer, ServerSideEncryption, StorageClass, SSECustomerAlgorithm,
+    # SSECustomerKey, SSECustomerKeyMD5, SSEKMSKeyId, SSEKMSEncryptionContext, Tagging, WebsiteRedirectLocation
 
+    """
+    MetaData : 이미지 메타데이타에 업로드한 사용자 노출용 UID, Document ID 첨부해서
+    삭제할 때 JWT로 1차 검증하고, 삭제할 때 
+    """
     client_r2.upload_file(
         Filename=fname_temp,
         Bucket=cfSettings.BUCKET,
         Key=resolved_key,
-        ExtraArgs={"ContentType": f"image/{CONTENT_TYPE}"},
+        ExtraArgs={
+            "ContentType": f"image/{CONTENT_TYPE}",
+            "Metadata": {
+                "upload_user_id": "123",
+                "upload_user_doc_id": "aaabbbccc",
+            },
+        },
     )
 
     # 임시 파일 삭제
@@ -46,3 +65,31 @@ def resolve_temp_image(
     # 업로드하고 Url 반환
     image_url = f"{cfSettings.URL_BASE}/{resolved_key}"
     return image_url
+
+
+# FIXME: async 병렬 or 병렬
+def delete_uploade_image(originImageURL: str) -> Union[Url, None]:
+
+    uploaded_file_key = originImageURL.replace(cfSettings.URL_BASE, "")[1:]
+    # NOTE: 그냥 R2 worker 만들어서 할까..?
+    # client_r2.download_file
+    # attr = client_r2.get_object_attributes(
+    #     Bucket=cfSettings.BUCKET, Key=uploaded_file_key, ObjectAttributes=["ETag"]
+    # )
+    print()
+
+    print(f"{originImageURL=}")
+    print()
+    print(f"{uploaded_file_key=}")
+    print()
+    from pprint import pprint
+
+    head = client_r2.head_object(Bucket=cfSettings.BUCKET, Key=uploaded_file_key)
+    head[
+        "Metadata"
+    ]  # 여기서 업로드한 사용자 public user_id + document(private) user_id 검증해서 삭제하면 됨
+    pprint(head)
+
+    # client_r2.delete_object(Bucket=cfSettings.BUCKET, Key=uploaded_file_key)
+
+    return
