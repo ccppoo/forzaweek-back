@@ -12,3 +12,4 @@ from .auth import router as AuthRouter
 from .dev import router as devRouter
 from .user import router as userRouter
 from .comment import router as commentRouter
+from .board import router as boardRouter
