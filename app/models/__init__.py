@@ -9,6 +9,7 @@ from .track import dbInit as trackDBInit
 from .tuning import dbInit as tuningDBInit
 from .user import dbInit as userDBInit
 from .comment import dbInit as commentDBInit
+from .board import dbInit as boardDBInit
 
 __all__ = ["models"]
 
@@ -24,4 +25,5 @@ models = (
     *tuningDBInit,
     *userDBInit,
     *commentDBInit,
+    *boardDBInit,
 )
