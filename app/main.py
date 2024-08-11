@@ -1,11 +1,14 @@
-from fastapi import FastAPI
+from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import JSONResponse
+from starlette import status
 from app.routers import *
 from app.websocket import *
 from app.swagger import swaggerSettings
 from app.logger import get_logger
 from app.lifespan import lifespan
 
+from fastapi.exceptions import RequestValidationError
 
 logger = get_logger()
 
@@ -43,10 +46,23 @@ app.include_router(FH5Router)
 app.include_router(AuthRouter)
 app.include_router(userRouter)
 app.include_router(commentRouter)
+app.include_router(boardRouter)
 # NOTE: remove dev router when release
 app.include_router(devRouter)
 # websocket
 app.include_router(stateManageRouter)
+
+
+@app.exception_handler(RequestValidationError)
+async def validation_exception_handler(request: Request, exc: RequestValidationError):
+    exc_str = f"{exc}".replace("\n", " ").replace("   ", " ")
+    logger.error(f"{request}: {exc_str}")
+    content = {"status_code": 10422, "message": exc_str, "data": None}
+    # return
+    # WARNING: Only for DEV
+    return JSONResponse(
+        content=content, status_code=status.HTTP_422_UNPROCESSABLE_ENTITY
+    )
 
 
 @app.get("/")
