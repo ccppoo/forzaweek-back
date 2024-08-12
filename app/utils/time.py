@@ -11,7 +11,13 @@ def datetime_utc() -> datetime:
     return datetime.now(UTC)
 
 
+def timestamp_utc_s() -> int:
+    # return timestamp as seconds
+    return int(datetime.now(tz=timezone.utc).timestamp())
+
+
 def timestamp_utc_ms() -> int:
+    # return timestamp as milliseconds
     return int(datetime.now(tz=timezone.utc).timestamp() * 1000)
 
 
