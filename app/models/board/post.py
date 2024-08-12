@@ -6,6 +6,11 @@ from .block import *
 from datetime import datetime
 from app.utils.time import datetime_utc
 
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from app.models.user import UserAuth
+
 __all__ = ("Post",)
 
 
@@ -47,6 +52,12 @@ class PostData(BaseModel):
             _blocks.append(block)
         self.blocks = _blocks
         return
+
+    def update_file_key(self, user: UserAuth) -> None:
+        # update image file key if exists
+        for block in self.blocks:
+            if isinstance(block, ImageBlockData):
+                block.update_image_key(user)
 
 
 class Post(PostTitle, PostCategory, PostMeta, Document):

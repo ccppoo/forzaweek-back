@@ -1,14 +1,26 @@
+from __future__ import annotations
 import pathlib
 import os
 from app.configs import runtimeSettings, cfSettings
 from typing import Tuple, Union
 from app.types.http import Url
 from app.cloud import client_r2
-from app.models.user import UserAuth
 from pydantic import BaseModel
-from .temp import R2_object_head_response, R2_ObjectMetaData, R2_object_delete_response
-
+from .temp import (
+    R2_object_head_response,
+    R2_ObjectMetaData,
+    R2_object_delete_response,
+    R2_object_copy_response,
+)
+from app.utils.image import get_key, update_key, key_to_url
 from pprint import pprint
+
+# from mypy_boto3_s3.type_defs import CopyObjectOutputTypeDef
+
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from app.models.user import UserAuth
 
 
 # FIXME: async 병렬 or 병렬
@@ -102,3 +114,57 @@ def delete_uploade_image(originImageURL: str, user: UserAuth) -> Union[Url, None
     # delete_response.is_success (HTTP code 204 반환)
 
     return
+
+
+def update_file_key(image_url: str, user: UserAuth) -> str:
+    """
+    upload/user/ ...  -> /board/post/ ... 으로 변환
+
+    # 최초 작성의 경우 (CF worker가 토큰만으로 식별하기 때문에 email 밖에 없음)
+
+    1. 이미지 올린 사람이 맞는지 HEAD response를 통해서 확인
+    2. 기존 object를 자동 삭제가 안되는 key path로 복사
+    3. 복사 성공하고, 원래 있던 TEMP 파일은 삭제
+
+    # 수정의 경우 (upload/user/ ... 이 아닌 다른 이미지 파일의 경우)
+
+    1. key가 임시 파일 PATH가 아닌 경우 pass (이거는 앞에서 먼저 걸러줌)
+    """
+    key = get_key(image_url)
+    # print()
+    # print(f"{key=}")
+    # return
+    # 1. 이미지 올린 사람이 맞는지 HEAD response를 통해서 확인
+    head = client_r2.head_object(Bucket=cfSettings.BUCKET, Key=key)
+    head_resposne = R2_object_head_response(**head)
+    # should be
+    match_user_email = (
+        head_resposne.Metadata.upload_user_email == user.oauth.microsoft.email
+    )
+
+    if not match_user_email:
+        return
+    # print(f"{match_user_email=} {head_resposne.Metadata.upload_user_email}")
+    # 2. 원래 있던 object 복사
+    new_key = update_key("board/post", key.removeprefix("user/upload/"))
+    # returns CopyObjectOutputTypeDef
+    copy_response = client_r2.copy_object(
+        Bucket=cfSettings.BUCKET, Key=new_key, CopySource=f"{cfSettings.BUCKET}/{key}"
+    )
+    # print()
+    # pprint(copy_response)
+    # print()
+    copy_response = R2_object_copy_response(**copy_response)
+
+    # 3. 기존 object 삭제
+    reply = client_r2.delete_object(Bucket=cfSettings.BUCKET, Key=key)
+    delete_response = R2_object_delete_response(**reply)
+
+    # pprint(delete_response)
+    # print()
+    # 4. 새로운 key url 반환
+    new_key_url = key_to_url(new_key)
+    # print(f"{new_key_url=}")
+    # print()
+
+    return new_key_url
