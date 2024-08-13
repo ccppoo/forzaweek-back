@@ -79,7 +79,9 @@ def resolve_temp_image(
 
 # FIXME: async 병렬 or 병렬
 def delete_uploade_image(originImageURL: str, user: UserAuth) -> Union[Url, None]:
-
+    # TODO: purge cache after deleting image
+    # doc : https://developers.cloudflare.com/api/operations/zone-purge#purge-cached-content-by-url
+    # default -> 4 hours
     uploaded_file_key = originImageURL.replace(cfSettings.URL_BASE, "")[1:]
     # NOTE: 그냥 R2 worker 만들어서 할까..?
 
@@ -135,6 +137,7 @@ def update_file_key(image_url: str, user: UserAuth) -> str:
     # print(f"{key=}")
     # return
     # 1. 이미지 올린 사람이 맞는지 HEAD response를 통해서 확인
+    # print(f"get head object : {key=}")
     head = client_r2.head_object(Bucket=cfSettings.BUCKET, Key=key)
     head_resposne = R2_object_head_response(**head)
     # should be
@@ -148,8 +151,19 @@ def update_file_key(image_url: str, user: UserAuth) -> str:
     # 2. 원래 있던 object 복사
     new_key = update_key("board/post", key.removeprefix("user/upload/"))
     # returns CopyObjectOutputTypeDef
+
+    metadata = R2_ObjectMetaData(
+        upload_user_email=user.oauth.microsoft.email, upload_user_oid=str(user.id)
+    )
+    print(f"board/post로 옮기는 이미지 새로운 메타 데이타")
+    pprint(metadata)
+
     copy_response = client_r2.copy_object(
-        Bucket=cfSettings.BUCKET, Key=new_key, CopySource=f"{cfSettings.BUCKET}/{key}"
+        Bucket=cfSettings.BUCKET,
+        Key=new_key,
+        CopySource=f"{cfSettings.BUCKET}/{key}",
+        Metadata=metadata.model_dump(),
+        MetadataDirective="REPLACE",
     )
     # print()
     # pprint(copy_response)
