@@ -47,6 +47,7 @@ app.include_router(AuthRouter)
 app.include_router(userRouter)
 app.include_router(commentRouter)
 app.include_router(boardRouter)
+app.include_router(taggingRouter)
 # NOTE: remove dev router when release
 app.include_router(devRouter)
 # websocket
