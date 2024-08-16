@@ -21,7 +21,7 @@ import pathlib
 import os
 from beanie import WriteRules, DeleteRules
 
-router = APIRouter(prefix="/manufacturer", tags=["image"])
+router = APIRouter(prefix="/manufacturer", tags=["manufacturer"])
 
 
 class Nation(BaseModel):

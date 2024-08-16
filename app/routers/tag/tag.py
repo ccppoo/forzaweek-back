@@ -11,7 +11,9 @@ from app.services.image import resolve_temp_image
 from app.models.tag import TagDescription, TagName, Tag as TagDB
 from app.models.tag import TagKind as TagKindDB
 
-router = APIRouter(prefix="/tag", tags=["tag"])
+__all__ = ("router",)
+
+router = APIRouter(prefix="")
 
 
 class TagCreate(BaseModel):
@@ -43,7 +45,7 @@ class TagEdit(BaseModel):
     mergedFrom: List[str] = Field(default=[])
 
 
-@router.get("")
+@router.get("/all")
 async def get_all_tags(kind: Optional[str] = None):
 
     tags = None
@@ -90,7 +92,7 @@ async def search_tag_by_keyword(keyword: Optional[str] = None):
     return [x.to_front() for x in tagss]
 
 
-@router.post("")
+@router.post("/create")
 async def add_tag(tag: TagCreate):
 
     tagDB = await TagDB.find_one(

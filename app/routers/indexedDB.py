@@ -26,7 +26,7 @@ import asyncio
 from app.services.image import resolve_temp_image
 from app.utils.time import timestamp_utc_ms
 
-router = APIRouter(prefix="/db", tags=["indexedDB", "car", "manufacturer"])
+router = APIRouter(prefix="/db", tags=["indexedDB", "web client"])
 
 
 @router.get("/car2")

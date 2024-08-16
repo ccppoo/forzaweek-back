@@ -11,7 +11,7 @@ import asyncio
 from app.services.image import resolve_temp_image
 from app.models.tag import TagKindName, TagKindDescription, TagKind as TagKindDB
 
-router = APIRouter(prefix="/tagkind", tags=["tag"])
+router = APIRouter(prefix="/tagkind", tags=["tagkind"])
 
 
 class TagKindCreate(BaseModel):

@@ -17,7 +17,9 @@ from pprint import pprint
 from pydantic import BaseModel, field_validator, Field
 from beanie.odm.fields import PydanticObjectId
 
-router = APIRouter(prefix="/comment")
+__all__ = ("router",)
+
+router = APIRouter(prefix="")
 
 COMMENT_SORT_OPTION = ["date", "score", "replies", "vote"]
 COMMENT_LIMIT_DEFAULT = 10
