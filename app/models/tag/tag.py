@@ -28,11 +28,14 @@ class TagDescription(i18n):
 
 class Tag(Document):
 
-    name: List[Link[TagName]]
-    name_en: str
-    imageURL: Optional[Url]  # 태그 설명하는 작은 이미지
-    description: List[Link[TagDescription]]  # 태그 설명란
-    kind: Link[TagKind]  # 태그 종류 분류
+    initial_name: Optional[str] = Field(
+        None, description="initial name when created when tagging"
+    )
+    name: List[Link[TagName]] = Field([])
+    name_en: Optional[str] = Field(None)
+    imageURL: Optional[Url] = Field(None)  # 태그 설명하는 작은 이미지
+    description: List[Link[TagDescription]] = Field([])  # 태그 설명란
+    kind: Optional[Link[TagKind]] = Field(None)  # 태그 종류 분류
 
     # management
     parentTag: Optional[Link["Tag"]] = Field(default=None)  # 상위 개념
