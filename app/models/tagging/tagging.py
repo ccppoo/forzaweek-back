@@ -2,7 +2,7 @@ from __future__ import annotations
 from beanie import Document, Indexed, Link, BackLink
 from bson.dbref import DBRef
 from pydantic import BaseModel, EmailStr, Field, field_validator
-from typing import List, Optional, Literal, Set
+from typing import List, Optional, Literal, Set, Annotated
 from app.models.i18n import i18n
 from app.types.http import Url
 
@@ -12,6 +12,7 @@ from pprint import pprint
 from beanie.odm.fields import PydanticObjectId
 from datetime import datetime
 from app.utils.time import datetime_utc
+import pymongo
 
 __all__ = ("Tagging",)
 
@@ -25,11 +26,14 @@ class TagReputaion(BaseModel):
 
 class Tagging(Document):
     # id
-    subject_id: PydanticObjectId  # 태깅하는 문서
-    post_type: Literal["car", "decal", "track", "tuning"]
-    tag: Link[Tag]
+    subject_id: Annotated[PydanticObjectId, Indexed()]  # 태깅하는 문서
+    post_type: Annotated[
+        Literal["car", "decal", "track", "tuning"], Indexed(index_type=pymongo.TEXT)
+    ]
+    tag: Annotated[Link[Tag], Indexed()]
     up_vote: List[str] = Field(default=[])  # user public id
-    down_vote: List[str] = Field(default=[])
+    down_vote: List[str] = Field(default=[])  # user public id
+    tagger: List[str] = Field(default=[])  # user public id
     created_at: datetime = Field(default_factory=datetime_utc)
 
     @property
