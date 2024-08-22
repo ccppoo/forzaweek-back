@@ -17,7 +17,7 @@ from app.services.auth.deps import get_current_active_user, get_optional_active_
 
 __all__ = ("router",)
 
-router = APIRouter(prefix="/tagging")
+router = APIRouter(prefix="/tagging", tags=["tagging"])
 
 # 668e43139fea9e1931a55e8d - 블루아카이브 데칼
 

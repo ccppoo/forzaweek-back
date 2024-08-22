@@ -14,7 +14,7 @@ from app.models.tag import TagCategory
 
 __all__ = ("router",)
 
-router = APIRouter(prefix="/tag")
+router = APIRouter(prefix="/tag", tags=["tag", "tagItem"])
 
 
 class TagCreate(BaseModel):

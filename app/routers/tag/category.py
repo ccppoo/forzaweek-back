@@ -9,7 +9,7 @@ from app.models.tag import TagDescription, TagName, TagCategory
 
 __all__ = ("router",)
 
-router = APIRouter(prefix="/category")
+router = APIRouter(prefix="/category", tags=["tag category", "category"])
 
 
 """
