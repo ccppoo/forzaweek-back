@@ -1,21 +1,22 @@
-from .tag import Tag, TagDescription, TagName
-from .kind import TagKind, TagKindName, TagKindDescription
+from .tag import TagItem
+from .category import TagCategory
+from .base import TagName, TagDescription, TagBase
+from .tagging import Tagging
 
 dbInit = (
-    Tag,
+    TagItem,
+    TagBase,
     TagDescription,
     TagName,
-    TagKind,
-    TagKindName,
-    TagKindDescription,
+    TagCategory,
+    Tagging,
 )
 
 __all__ = (
     "dbInit",
-    "Tag",
+    "TagItem",
     "TagDescription",
     "TagName",
-    "TagKind",
-    "TagKindName",
-    "TagKindDescription",
+    "TagCategory",
+    "Tagging",
 )
