@@ -1,5 +1,5 @@
 from app.models.user import UserAuth
-from app.models.tag import Tag
+from app.models.tag import TagItem
 from fastapi import APIRouter, Depends, Query, Path, Body
 from typing import Annotated, Optional, Literal, List
 from app.models.user.UserAuth import UserAuth

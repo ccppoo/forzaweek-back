@@ -7,7 +7,7 @@ from app.models.i18n import i18n
 from app.types.http import Url
 from app.models.components import Vote
 from app.utils.time import datetime_utc
-from app.models.tag import Tag
+from app.models.tag import TagItem
 
 __all__ = ("Tagable",)
 

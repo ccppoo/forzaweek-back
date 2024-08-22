@@ -7,7 +7,7 @@ from pydantic import Field
 from app.types.http import Url
 from app.models.car import Car
 from app.utils.time import datetime_utc
-from app.models.tag import Tag
+from app.models.tag import TagItem
 from pprint import pprint
 from abc import abstractmethod
 
@@ -25,7 +25,7 @@ class DecalBase(Document):
     imageURLs: List[Url] = Field(default=[])
     firstImage: Optional[Url]
 
-    tags: List[Link[Tag]] = Field(default=[])
+    tags: List[Link[TagItem]] = Field(default=[])
 
     # backend only
     first_uploaded: datetime = Field(default_factory=datetime_utc)

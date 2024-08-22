@@ -2,7 +2,7 @@ from fastapi import APIRouter, Depends
 
 from app.models.tuning import Tuning_FH5
 from app.models.car import Car as CarDB
-from app.models.tag import Tag as TagDB
+from app.models.tag import TagItem as TagDB
 
 from pydantic import BaseModel, Field
 from typing import List, Dict, Any, Optional

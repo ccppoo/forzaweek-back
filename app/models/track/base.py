@@ -4,7 +4,7 @@ from datetime import datetime
 from beanie import Document, Link
 from pydantic import Field
 from typing import List
-from app.models.tag import Tag
+from app.models.tag import TagItem
 from app.models.i18n import i18n
 
 __all__ = ("Track", "dbInit")
@@ -28,7 +28,7 @@ class TrackBase(Document):
     name: List[Link[TrackName]]
     name_en: str
     liberal_translation: List[Link[TrackLiberalTranslation]]
-    tag: List[Link[Tag]] = Field(default=[])
+    tag: List[Link[TagItem]] = Field(default=[])
     world: str  # DLC 지역과 기본 지역 구분
 
     @property

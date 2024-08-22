@@ -6,8 +6,9 @@ from pprint import pprint
 from app.models.nation import Nation as NationDB
 from app.models.manufacturer import Manufacturer as ManufacturerDB
 from app.models.car import Car as CarDB
-from app.models.tag import Tag as TagDB
-from app.models.tag import TagKind as TagKindDB
+from app.models.tag import TagItem as TagDB
+
+# from app.models.tag import TagItemCategory as TagCategoryDB
 from app.models.decal import Decal_FH5
 from app.models.tuning import Tuning_FH5
 
@@ -35,7 +36,7 @@ async def get_data_status() -> DataStatus:
     car_count = await CarDB.count()
     tag_count = await TagDB.count()
     decal_count = await Decal_FH5.count()
-    tagkind_count = await TagKindDB.count()
+    # tagkind_count = await TagCategoryDB.count()
     tuning_count = await Tuning_FH5.count()
 
     dataStatus = DataStatus(
@@ -44,7 +45,7 @@ async def get_data_status() -> DataStatus:
         car=car_count,
         decal=decal_count,
         tag=tag_count,
-        tagkind=tagkind_count,
+        tagkind=0,
         tuning=tuning_count,
     )
     return dataStatus

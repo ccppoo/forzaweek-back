@@ -2,7 +2,7 @@ from datetime import datetime
 from beanie import Document, Link
 from pydantic import Field
 from typing import List
-from app.models.tag import Tag
+from app.models.tag import TagItem
 from app.models.car import Car
 
 __all__ = ("TuningBase",)
@@ -17,7 +17,7 @@ class TuningBase(Document):
     car: Link[Car]
     creator: str
 
-    tags: List[Link[Tag]] = Field(default=[])
+    tags: List[Link[TagItem]] = Field(default=[])
 
     @property
     def created(self) -> datetime | None:

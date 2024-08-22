@@ -8,7 +8,7 @@ from app.models.comment import (
     CommentBase,
 )
 from app.models.user import UserAuth
-from app.models.tag import Tag
+from app.models.tag import TagItem
 from fastapi import APIRouter, Depends, Query, Path
 from typing import Annotated, Optional, Literal, List
 from app.models.user.UserAuth import UserAuth
