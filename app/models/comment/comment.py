@@ -11,7 +11,6 @@ from beanie.odm.fields import PydanticObjectId
 
 __all__ = (
     "CommentBase",
-    "TaggableComment",
     "VotableSubComment",
     "VotableMainComment",
 )
@@ -31,35 +30,6 @@ class CommentBase(Document):
     class Settings:
         name = "comment"
         is_root = True
-        use_state_management = True
-
-
-class TaggableComment(CommentBase, Tagable):
-
-    # tags: List[Link[Tag]] = Field(default=[])
-
-    def to_front(self):
-
-        tags = [str(t.id) for t in self.tags]
-
-        return {
-            "creator": self.creator.user_id,
-            "subject_to": str(self.subject_to),
-            "parent": str(self.parent),
-            "value": self.value,
-            "created_at": self.created_at,
-            "modified_at": self.modified_at,
-            "tags": tags,
-        }
-
-    async def add_tag(self):
-        self.tags
-        return
-
-    async def remove_tag(self):
-        return
-
-    class Settings:
         use_state_management = True
 
 

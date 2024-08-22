@@ -3,14 +3,13 @@ from typing import Any, List, Generic, TypeVar
 from beanie import Document, Link
 from pydantic import BaseModel, Field
 from beanie.odm.fields import PydanticObjectId
-from .comment import VotableSubComment, TaggableComment, VotableMainComment
+from .comment import VotableSubComment, VotableMainComment
 from app.utils.time import datetime_utc
 
 
 __all__ = (
     "CommentsBase",
     "VotableComments",
-    "TaggableComments",
 )
 
 
@@ -47,19 +46,6 @@ class VotableComments(CommentsBase):
     def get_id_by(self, page: int, limit: int, order: str):
         # 조건에 만족하는 댓글 ID 프런트로 보내는 것
         comment_ids = [str(c.id) for c in self.comments]
-        # TODO: 쿼리 조건에 만족하는 document ID 보내기
-        return {"comments": comment_ids}
-
-    class Settings:
-        use_state_management = True
-
-
-class TaggableComments(CommentsBase):
-    comments: List[Link[TaggableComment]] = Field(default=[])
-
-    def get_id_by(self, page: int, limit: int, order: str):
-        # 조건에 만족하는 댓글 ID 프런트로 보내는 것
-        comment_ids = [str(c.to_ref().id) for c in self.comments]
         # TODO: 쿼리 조건에 만족하는 document ID 보내기
         return {"comments": comment_ids}
 

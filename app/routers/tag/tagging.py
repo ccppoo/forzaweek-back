@@ -186,29 +186,6 @@ async def do_tagging_to_subject_id(
     return
 
 
-# @router.get("/{post_type}/{subject_id}/{tag_id}")
-# async def get_tag_of_post_tagging(
-#     post_type: Annotated[str, Path()],
-#     subject_id: Annotated[str, Path()],
-#     tag_id: Annotated[str, Path()],
-# ):
-#     """
-#     게시물 태깅한 태그들 중에서 하나 가져오는 것 -> up/down vote 가져오는 거
-#     """
-#     _tag_id = PydanticObjectId(tag_id)
-#     _subject_id = PydanticObjectId(subject_id)
-
-#     tagging = await Tagging.find_one(
-#         Tagging.subject_id == _subject_id,
-#         Tagging.post_type == post_type,
-#         Tagging.tag.id == _tag_id,
-#     )
-#     if not tagging:
-#         return
-
-#     return tagging.model_dump()
-
-
 @router.post("/{post_type}/{subject_id}/{tag_id}/{vote_type}")
 async def vote_tag(
     post_type: Annotated[str, Path()],

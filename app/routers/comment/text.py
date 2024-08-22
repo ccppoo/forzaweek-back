@@ -1,7 +1,5 @@
 from app.models.comment import (
-    TaggableComments,
     VotableComments,
-    TaggableComment,
     VotableSubComment,
     VotableMainComment,
     CommentsBase,
@@ -81,9 +79,6 @@ async def get_comment_from_subject_id(
     if not comments:
         return
 
-    if comments._class_id == TaggableComments._class_id:
-        return comments.get_id_by(page=1, limit=30, order="date")
-
     if comments._class_id == VotableComments._class_id:
         comments = await VotableComments.find_one(
             VotableComments.subject_to == _subject_id, fetch_links=True
@@ -112,11 +107,6 @@ async def get_comment_from_subject_id(
 
     if not comments:
         return
-
-    if comments._class_id == TaggableComment._class_id:
-        comments: TaggableComment
-        await comments.fetch_all_links()
-        return comments.to_front()
 
     if comments._class_id == VotableMainComment._class_id:
         comments = await VotableMainComment.get(_comment_id, fetch_links=False)
@@ -180,10 +170,6 @@ async def get_sub_comment_from_comment(
     # pprint(subComment)
     if not subComment:
         return
-
-    if subComment._class_id == TaggableComments._class_id:
-        # subComment: TaggableComments
-        pass
 
     if subComment._class_id == VotableSubComment._class_id:
         return subComment.to_front(current_user)
@@ -314,43 +300,13 @@ async def create_test_votable(subject_id: str):
     return
 
 
-async def create_test_taggable(subject_id: str):
-    CAR_ID = "6684cbca6b755b09a74f84fc"
-    DECAL_ID = "668e43139fea9e1931a55e8d"
-    SUBJECT_ID = PydanticObjectId(subject_id)
-    USER_ID = "66ab8776990f7c8c89d12473"
-
-    user = await UserAuth.get(USER_ID)
-
-    tcs = await TaggableComments(subject_to=SUBJECT_ID, comments=[]).create()
-
-    tags = []
-    decal_tag_1 = await Tag.get("668bb6d9c677bb3e3b93e651")
-    tc = await TaggableComment(
-        creator=user,
-        value="테스트용 태그 댓글 1",
-        subject_to=SUBJECT_ID,
-        parent=str(tcs.id),
-        tags=[decal_tag_1],
-    ).create()
-
-    tcs.comments.append(tc)
-    await tcs.save_changes()
-
-    return
-
-
 @router.post("/test/{comment_type}")
 async def make_comment(
-    comment_type: Literal["votable", "taggable"],
+    comment_type: Literal["votable"],
     subject: Annotated[str | None, Query()],
 ):
 
     match comment_type:
-        case "taggable":
-            TUNING_ID = "66a1bd93c0c2a9311e907246"
-            if subject:
-                await create_test_taggable(subject)
         case "votable":
             if subject:
                 await create_test_votable(subject)
