@@ -1,19 +1,20 @@
 from __future__ import annotations
-from fastapi import APIRouter
+from fastapi import APIRouter, Path, Query
 from pydantic import BaseModel, Field
 import asyncio
 
-from typing import List, Dict, Any, Optional
+from typing import List, Dict, Any, Optional, Annotated, Literal
 from pprint import pprint
 from beanie import DeleteRules
 
 from app.services.image import resolve_temp_image
-from app.models.tag import TagDescription, TagName, Tag as TagDB
-from app.models.tag import TagKind as TagKindDB
+
+from app.models.tag import TagDescription, TagName, TagItem
+from app.models.tag import TagCategory
 
 __all__ = ("router",)
 
-router = APIRouter(prefix="")
+router = APIRouter(prefix="/tag")
 
 
 class TagCreate(BaseModel):
@@ -45,58 +46,86 @@ class TagEdit(BaseModel):
     mergedFrom: List[str] = Field(default=[])
 
 
-@router.get("/all")
 async def get_all_tags(kind: Optional[str] = None):
+    # FIXME:
+    return
 
-    tags = None
-    if kind:
-        tags = await TagDB.find(TagDB.kind == kind, fetch_links=True).to_list()
-        pass
-    if not kind:
-        tags = await TagDB.find_all(fetch_links=True).to_list()
-
-    a = [tag.to_front() for tag in tags]
-    return a
+    # a = [tag.to_front() for tag in tags]
+    # return a
 
 
 @router.get("/{tagID}")
-async def get_tag_by_id(tagID: str, kind: Optional[str] = None):
+async def get_tag_by_id(tagID: str):
 
-    tag = await TagDB.get(tagID, fetch_links=True)
+    tag = await TagItem.get(tagID)
+    return await tag.dump()
 
-    return tag.to_front_simple()
 
-
-@router.get("/search/a")
-async def search_tag_by_keyword(keyword: Optional[str] = None):
+@router.get("/{tagID}/name")
+async def get_tag_explaination(
+    tagID: Annotated[str, Path()],
+    lang: Annotated[Literal["en", "ko", "jp"], Query()] = None,
+):
     """
-    TODO:
-    태그 검색할 때 자동완성으로 보여주는 태그 목록들
-    프론트에서 500ms 딜레이로 요청을 보내지만 딜레이나 백엔드에서 제어 및 캐싱 전략 짤 것
+    하나의 태그에 대해서 이름(name)에 대해서 찾는다
     """
-    print(f"{keyword=}")
+    print(f"{tagID=} , {lang=}")
+    tag = await TagItem.get(tagID)
+    names = await tag.model_dump_name()
+    return names.model_dump()
 
-    tags = await TagName.find_many(
-        {"value": {"$regex": f"^.*{keyword}.*$", "$options": "i"}},
-    ).to_list()
 
-    tag_ids = [t.id for t in tags]
-    # print(f"{tag_ids=}")
+@router.get("/{tagID}/explaination")
+async def get_tag_explaination(
+    tagID: Annotated[str, Path()],
+    lang: Annotated[Literal["en", "ko", "jp"], Query()] = None,
+):
+    """
+    하나의 태그에 대해서 설명(explaination)에 대해서 찾는다
+    """
+    print(f"{tagID=} , {lang=}")
+    tag = await TagItem.get(tagID)
+    names = await tag.model_dump_description()
+    return names.model_dump()
 
-    query = {"name.$id": {"$in": tag_ids}}
 
-    tagss = await TagDB.find_many(query).to_list()
-    # pprint(tagss)
-    jobs2 = [t.fetch_all_links() for t in tagss]
-    await asyncio.gather(*jobs2)
-    return [x.to_front() for x in tagss]
+@router.get("/{tagID}/relation")
+async def get_tag_relations(
+    tagID: Annotated[str, Path()],
+    type: Annotated[
+        Literal["merged", "parent", "children", "vertical"], Query()
+    ] = None,
+):
+    """
+    하나의 태그에 대해서 병합된 태그(merged), 부모 태그(parent), 자식 태그(children)에 대해서 찾는다
+    """
+
+    # 66c6a30c9503900ec56fe291 - 헤일로
+    # 66c6a73c4cd4ccf793f5fa5c - 헤일로 인피니트
+    print(f"{tagID=} {type=}")
+
+    tag = await TagItem.get(tagID)
+    if not tag:
+        return
+
+    match type:
+        case "merged":
+            return tag.get_merge_relation()
+        case "parent":
+            return tag.get_parent_relation()
+        case "children":
+            return tag.get_children_relation()
+        case "vertical":
+            return tag.get_vertical_relation()
+        case None:
+            return tag.get_all_relations()
 
 
 @router.post("/create")
 async def add_tag(tag: TagCreate):
 
-    tagDB = await TagDB.find_one(
-        TagDB.name_en == tag.name_en,
+    tagDB = await TagItem.find_one(
+        TagItem.name_en == tag.name_en,
         fetch_links=True,
     )
 
@@ -105,7 +134,7 @@ async def add_tag(tag: TagCreate):
         return
 
     # 2. 태그 종류 조회
-    tag_kind = await TagKindDB.get(tag.kind)
+    tag_kind = await TagCategoryDB.get(tag.kind)
     if not tag_kind:
         return
 
@@ -129,7 +158,7 @@ async def add_tag(tag: TagCreate):
     # children
     # mergedTo
     # mergedFrom
-    tagDB: TagDB = await TagDB(
+    tagDB: TagItem = await TagItem(
         name=tag_names,
         name_en=tag.name_en,
         description=tag_descriptions,
@@ -144,7 +173,7 @@ async def add_tag(tag: TagCreate):
 async def update_tag(itemID: str, tag: TagEdit):
     assert itemID == tag.id
 
-    tag_old = await TagDB.get(tag.id, fetch_links=True)
+    tag_old = await TagItem.get(tag.id, fetch_links=True)
 
     if not tag_old:
         return 403
@@ -192,7 +221,7 @@ async def update_tag(itemID: str, tag: TagEdit):
 
 @router.delete("/{itemID}")
 async def delete_tag(itemID: str):
-    car: TagDB = await TagDB.get(itemID, fetch_links=True)
+    car: TagItem = await TagItem.get(itemID, fetch_links=True)
     if not car:
         return
 
@@ -208,7 +237,8 @@ async def delete_tag(itemID: str):
 
 @router.get("/edit/{itemID}")
 async def get_tag_for_edit(itemID: str):
-    _tagDB = await TagDB.get(itemID, fetch_links=True)
+    return 200
+    _tagDB = await TagItem.get(itemID, fetch_links=True)
 
     if not _tagDB:
         return
@@ -229,3 +259,88 @@ async def get_tag_for_edit(itemID: str):
     tagDB["description"] = _description
 
     return tagDB
+
+
+@router.post("/test_create_merged")
+async def create_test_tag():
+
+    # name: List[Link[TagName]] = Field([])
+    # imageURL: Optional[Url] = Field(None)  # 태그 설명하는 작은 이미지
+    # description: List[Link[TagDescription]] = Field([])  # 태그 설명란
+    # category: Optional[Link[TagCategory]] = Field(None)  # 태그 종류 분류
+    tagname = await TagName.find_one(TagName.value == "HALO")
+
+    if not tagname:
+        return
+    # TagItem.find({TagItem.name : {'$in' : []}})
+    # {'name.$id': ObjectId('66c6a30c9503900ec56fe28e')}
+    # {'merged_from.$id': ObjectId('66c6a73c4cd4ccf793f5fa5c')}
+    haloTag = await TagItem.find_one({TagItem.name: tagname.to_ref()})
+    if not haloTag:
+        return
+    print("병합할 목표 찾음")
+    tagname = await TagName.find_one(TagName.value == "헤일로 TEST2")
+
+    if not tagname:
+        return
+
+    # TagItem.find({TagItem.name : {'$in' : []}})
+    haloInfiniteTag = await TagItem.find_one(
+        {TagItem.name: tagname.to_ref()},
+    )
+    if not haloInfiniteTag:
+        return
+    print("병합될 목표 찾음")
+    # await haloInfiniteTag.fetch_all_links()
+    print("merge 중...")
+    await TagItem.merge(haloInfiniteTag, haloTag)
+    # haloTag.fetch_all_links() -> #WARNING: 무한으로 link 불러옴
+    # haloTag.model_dump() -> 이거 호출하면
+    print("완료")
+
+    return haloTag.model_dump()
+
+
+@router.post("/test_get_merged")
+async def create_test_tag():
+
+    # name: List[Link[TagName]] = Field([])
+    # imageURL: Optional[Url] = Field(None)  # 태그 설명하는 작은 이미지
+    # description: List[Link[TagDescription]] = Field([])  # 태그 설명란
+    # category: Optional[Link[TagCategory]] = Field(None)  # 태그 종류 분류
+    tagname = await TagName.find_one(TagName.value == "HALO")
+
+    if not tagname:
+        return
+    # TagItem.find({TagItem.name : {'$in' : []}})
+    haloTag = await TagItem.find_one({TagItem.name: tagname.to_ref()})
+    if not haloTag:
+        return
+
+    await haloTag.fetch_all_links()
+    return haloTag.model_dump()
+
+
+@router.post("/test_create_blue")
+async def create_test_tag():
+
+    # name: List[Link[TagName]] = Field([])
+    # imageURL: Optional[Url] = Field(None)  # 태그 설명하는 작은 이미지
+    # description: List[Link[TagDescription]] = Field([])  # 태그 설명란
+    # category: Optional[Link[TagCategory]] = Field(None)  # 태그 종류 분류
+
+    cat_game = await TagCategory.get("66c6a30c9503900ec56fe289")
+    if not cat_game:
+        return
+
+    tag_names = []
+    tag_names.append(TagName(lang="unknown", value="블루 아카이브"))
+    tag_names.append(TagName(lang="ko", value="블루 아카이브"))
+    tag_names.append(TagName(lang="jp", value="ブルーアーカイブ"))
+    tag_names.append(TagName(lang="en", value="Blue Archive"))
+    [await tn.create() for tn in tag_names]
+
+    # TagItem.find({TagItem.name : {'$in' : []}})
+    blue_tag = await TagItem(name=tag_names, category=cat_game).create()
+
+    return await blue_tag.dump()

@@ -10,7 +10,6 @@ from .tuning import dbInit as tuningDBInit
 from .user import dbInit as userDBInit
 from .comment import dbInit as commentDBInit
 from .board import dbInit as boardDBInit
-from .tagging import dbInit as taggingDBInit
 
 __all__ = ["models"]
 
@@ -27,5 +26,4 @@ models = (
     *userDBInit,
     *commentDBInit,
     *boardDBInit,
-    *taggingDBInit,
 )

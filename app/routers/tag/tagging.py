@@ -5,24 +5,25 @@ from pydantic.alias_generators import to_camel
 import asyncio
 from beanie.odm.fields import PydanticObjectId
 
-from typing import List, Dict, Any, Optional, Annotated
+from typing import List, Dict, Any, Optional, Annotated, Literal
 from pprint import pprint
 from beanie import DeleteRules
 from app.db import mongodb
 
-from app.models.tag import TagDescription, TagName, Tag as TagDB
-from app.models.tag import TagKind as TagKindDB
-from app.models.tagging import Tagging
+from app.models.tag import TagCategory, TagDescription, TagName, TagItem, Tagging
 from app.models.user import UserAuth
-from typing import Generic, TypeVar
-from app.models.tuning import Tuning_FH5
 from app.services.auth.deps import get_current_active_user, get_optional_active_user
 
-T = TypeVar("T")
 
 __all__ = ("router",)
 
-router = APIRouter(prefix="")
+router = APIRouter(prefix="/tagging")
+
+# 668e43139fea9e1931a55e8d - 블루아카이브 데칼
+
+TAG_ID = "66c6d88405ac814a19830673"
+DECAL_ID = "668e43139fea9e1931a55e8d"
+TEST_USER = "66ab8776990f7c8c89d12473"
 
 
 class TaggingNewTags(BaseModel):
@@ -105,16 +106,16 @@ async def do_tagging_to_subject_id(
         # 먼저 태그가 생성이 되었을 경우도 있으니 먼저 찾아본다.
         tagName = await TagName.find_one(TagName.value == new_tag.name)
         if tagName:
-            tagAlreadyExists = await TagDB.find_one({TagDB.name: tagName.to_ref()})
+            tagAlreadyExists = await TagItem.find_one({TagItem.name: tagName.to_ref()})
             if tagAlreadyExists:
                 print("tagAlreadyExists")
                 pprint(tagAlreadyExists)
                 tags.tags.append(TaggingTagItem(id=str(tagAlreadyExists.id)))
         else:
             # 태그 정보 갱신 안하고 그냥 이름만 넣은 경우
-            tagName = await TagDB.find_one(TagDB.initial_name == new_tag.name)
+            tagName = await TagItem.find_one(TagItem.initial_name == new_tag.name)
             if not tagName:
-                newTag = TagDB(initial_name=new_tag.name)
+                newTag = TagItem(initial_name=new_tag.name)
                 await newTag.insert()
                 print("new tag added")
                 pprint(newTag)
@@ -172,7 +173,7 @@ async def do_tagging_to_subject_id(
     # 3-2. 기존에 없었던 Tagging인 경우 새로 만들고 추가하기
     print(f"새로 만들어야화는 Tagging document들, {new_tagging_ids=}")
     for new_tag_id in new_tagging_ids:
-        _tag = await TagDB.get(new_tag_id)
+        _tag = await TagItem.get(new_tag_id)
         tagging = Tagging(
             subject_id=_subject_id,
             tag=_tag,
@@ -185,22 +186,72 @@ async def do_tagging_to_subject_id(
     return
 
 
-@router.get("/test")
+# @router.get("/{post_type}/{subject_id}/{tag_id}")
+# async def get_tag_of_post_tagging(
+#     post_type: Annotated[str, Path()],
+#     subject_id: Annotated[str, Path()],
+#     tag_id: Annotated[str, Path()],
+# ):
+#     """
+#     게시물 태깅한 태그들 중에서 하나 가져오는 것 -> up/down vote 가져오는 거
+#     """
+#     _tag_id = PydanticObjectId(tag_id)
+#     _subject_id = PydanticObjectId(subject_id)
+
+#     tagging = await Tagging.find_one(
+#         Tagging.subject_id == _subject_id,
+#         Tagging.post_type == post_type,
+#         Tagging.tag.id == _tag_id,
+#     )
+#     if not tagging:
+#         return
+
+#     return tagging.model_dump()
+
+
+@router.post("/{post_type}/{subject_id}/{tag_id}/{vote_type}")
+async def vote_tag(
+    post_type: Annotated[str, Path()],
+    subject_id: Annotated[str, Path()],
+    tag_id: Annotated[str, Path()],
+    vote_type: Annotated[Literal["up", "down"], Path()],
+    user: Annotated[UserAuth, Depends(get_current_active_user)],
+):
+    _tag_id = PydanticObjectId(tag_id)
+    _subject_id = PydanticObjectId(subject_id)
+
+    tagging = await Tagging.find_one(
+        Tagging.subject_id == _subject_id,
+        Tagging.post_type == post_type,
+        Tagging.tag.id == _tag_id,
+    )
+    if not tagging:
+        return
+
+    if vote_type == "up":
+        await tagging.up_voted_from(user.user_id)
+    if vote_type == "down":
+        await tagging.down_voted_from(user.user_id)
+
+    return tagging.model_dump()
+
+
+@router.get("/test1")
 async def test_tagging():
 
-    tag = await TagDB.get("668bb6d9c677bb3e3b93e651")  # 블루 아카이브
-    decalID = PydanticObjectId("668e43139fea9e1931a55e8d")
+    tag = await TagItem.get(TAG_ID)  # 블루 아카이브
+    decalID = PydanticObjectId(DECAL_ID)
     tagging = Tagging(subject_id=decalID, tag=tag, post_type="decal")
     await tagging.create()
     return tagging.model_dump()
 
 
-@router.get("/test1")
+@router.get("/test2")
 async def test_tagging_up_vote():
-    tag = await TagDB.get("668bb6d9c677bb3e3b93e651")  # 블루 아카이브
+    tag = await TagItem.get(TAG_ID)  # 블루 아카이브
     print("tag")
     pprint(tag)
-    decalID = PydanticObjectId("668e43139fea9e1931a55e8d")
+    decalID = PydanticObjectId(DECAL_ID)
     works = await Tagging.find_one(Tagging.tag.id == tag.id)
     print()
     print(f"{works=}")
@@ -213,41 +264,26 @@ async def test_tagging_up_vote():
     if not tagging:
         return
 
-    # match tagging.post_type:
-    #     case 'tuning':
-    #         Tuning_FH5
-    #         return
-    user = await UserAuth.get("66ab8776990f7c8c89d12473")
-
-    removeQuery = {"$pull": {"down_vote": {"$eq": user.user_id}}}
-    addToSetQuery = {"$addToSet": {"up_vote": user.user_id}}
-    await tagging.update(addToSetQuery, removeQuery)
-
-    tagging.save()
+    user = await UserAuth.get(TEST_USER)
+    await tagging.up_voted_from(user.user_id)
 
     return tagging.model_dump()
 
 
-@router.get("/test2")
+@router.get("/test3")
 async def test_tagging_down_vote():
-    tag = await TagDB.get("668bb6d9c677bb3e3b93e651")  # 블루 아카이브
+    tag = await TagItem.get(TAG_ID)  # 블루 아카이브
 
-    tuningID = PydanticObjectId("66a1bd93c0c2a9311e907246")
-
+    decal_id = PydanticObjectId(DECAL_ID)
     tagging = await Tagging.find_one(
-        Tagging.tag.id == tag.id, Tagging.subject_id == tuningID
+        Tagging.tag.id == tag.id, Tagging.subject_id == decal_id
     )
 
     if not tagging:
         return
 
-    user = await UserAuth.get("66ab8776990f7c8c89d12473")
+    user = await UserAuth.get(TEST_USER)
 
-    # addToSetQuery = {"$addToSet": {"down_vote": {"$each": [user.user_id]}}}
-    removeQuery = {"$pull": {"up_vote": {"$eq": user.user_id}}}
-    addToSetQuery = {"$addToSet": {"down_vote": user.user_id}}
-    await tagging.update(addToSetQuery, removeQuery)
-
-    tagging.save()
+    await tagging.down_voted_from(user.user_id)
 
     return tagging.model_dump()
