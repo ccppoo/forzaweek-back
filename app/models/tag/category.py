@@ -40,6 +40,38 @@ class TagCategory(TagHorizontal, TagVertical, TagBase):
         vr = self.get_vertical_relation()
         return {**mr, **vr}
 
+    async def name_id_image(self, with_id: bool = True):
+
+        name = (await self.model_dump_name()).model_dump()
+        data = {
+            "name": name,
+            "image_url": self.image_url,
+        }
+        if with_id:
+            data.update(id=str(self.id))
+        return data
+
+    async def get_parents(self, limit: int = 5):
+        parent_data = None
+        if self.parent and limit > 0:
+            if isinstance(self.parent, Link):
+                await self.fetch_link("parent")
+            parent_data = await self.parent.get_parents(limit - 1)
+
+        _name_id_image: dict = await self.name_id_image()
+        _name_id_image.update(parent=parent_data)
+
+        return _name_id_image
+
+    async def for_search_result(self):
+        """
+        태그 검색했을 때 반환하는 결과물로 id, name, category(name, id, image_url), parent(name, id, image_url) 반환
+        """
+        # _name_id_image: dict = await self.name_id_image()
+        me_and_parent = await self.get_parents()
+
+        return me_and_parent
+
     class Settings:
         name: str = "category"
         use_state_management = True

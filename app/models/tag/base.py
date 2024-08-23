@@ -36,18 +36,19 @@ class TagDescription(i18n):
 
 
 class i18nModelDump(BaseModel):
-    id: str
+    # id: str
     unknown: Optional[str] = Field(None)
     en: Optional[str] = Field(None)
     ko: Optional[str] = Field(None)
     jp: Optional[str] = Field(None)
 
     @staticmethod
-    def from_i18n(id: str, i18n_docs: List[i18n]):
+    # def from_i18n(id: str, i18n_docs: List[i18n]):
+    def from_i18n(i18n_docs: List[i18n]):
         lang = {}
         for i18n_doc in i18n_docs:
             lang[i18n_doc.lang] = i18n_doc.value
-        return i18nModelDump(id=id, **lang)
+        return i18nModelDump(**lang)
 
 
 class TagBase(Document):
@@ -66,7 +67,7 @@ class TagBase(Document):
             await self.fetch_link(name)
         i18ns: List[Union[TagDescription, TagName]] = self.__getattribute__(name)
 
-        return i18nModelDump.from_i18n(str(self.id), i18ns)
+        return i18nModelDump.from_i18n(i18ns)
 
     async def model_dump_name(self) -> i18nModelDump:
         return await self._model_dump_field("name")
