@@ -9,8 +9,9 @@ from pprint import pprint
 from beanie import DeleteRules
 
 from app.services.image import resolve_temp_image
-from app.models.tag import TagDescription, TagName, TagItem as TagDB
+from app.models.tag import TagDescription, TagName, TagItem
 from app.models.tag import TagCategory as TagCategoryDB
+from app.utils.data.dict import remove_none
 
 __all__ = ("router",)
 
@@ -33,10 +34,64 @@ async def search_tag_by_keyword(keyword: Optional[str] = None):
     tag_ids = [t.id for t in tags]
     # print(f"{tag_ids=}")
 
-    query = {"name.$id": {"$in": tag_ids}}
+    query1 = {"name.$id": {"$in": tag_ids}}
+    query2 = {"_class_id": TagItem._class_id}
 
-    tagss = await TagDB.find_many(query).to_list()
-    # pprint(tagss)
-    jobs2 = [t.fetch_all_links() for t in tagss]
-    await asyncio.gather(*jobs2)
-    return [x.to_front() for x in tagss]
+    tagss = await TagItem.find_many(query1, query2).to_list()
+    jobs2 = [t.for_search_result(3) for t in tagss]
+    jobs = await asyncio.gather(*jobs2)
+
+    tag_keys = []
+    lookup_tag_item = {}
+    lookup_tag_category = {}
+
+    tag_items = []
+    for tag in jobs:
+        _tag_id = tag.get("id")
+        tag_keys.append(tag.get("id"))
+        lookup_tag_item[_tag_id] = tag
+        if m_tag := tag.get("merged_to"):
+            _m_tag_id = m_tag.get("id")
+            tag_keys.append(_m_tag_id)
+            lookup_tag_item[_m_tag_id] = m_tag
+        if p_tag := tag.get("parent"):
+            _p_tag_id = p_tag["id"]
+            tag_keys.append(_p_tag_id)
+            lookup_tag_item[_p_tag_id] = p_tag
+        if c_tag := tag.get("category"):
+            _c_tag_id = c_tag["id"]
+            tag_keys.append(_c_tag_id)
+            lookup_tag_category[_c_tag_id] = {
+                "name": c_tag.get("name"),
+                "image_url": c_tag.get("image_url"),
+            }
+
+    for tag in jobs:
+        _tag_item = {}
+        _tag_id = tag.get("id")
+        _tag_item.update(
+            name=tag.get("name"),
+            image_url=tag.get("image_url"),
+        )
+        _tag_real_item = {"id": _tag_id}
+        if _m_tag := tag.get("merged_to"):
+            _tag_item.update(merged_to=_m_tag.get("id"))
+            _tag_real_item.update(merged_to=_m_tag.get("id"))
+        if _p_tag := tag.get("parent"):
+            _tag_item.update(parent=_p_tag.get("id"))
+            _tag_real_item.update(parent=_p_tag.get("id"))
+        if _c_tag := tag.get("category"):
+            _tag_item.update(category=_c_tag.get("id"))
+            _tag_real_item.update(category=_c_tag.get("id"))
+
+        lookup_tag_item.update({_tag_id: _tag_item})
+
+        tag_items.append(_tag_real_item)
+
+    # Lookup -> tags, category
+    data = {
+        "lookup_tag": remove_none(lookup_tag_item),
+        "lookup_category": remove_none(lookup_tag_category),
+        "tags": tag_items,
+    }
+    return data
