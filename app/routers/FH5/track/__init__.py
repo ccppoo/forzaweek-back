@@ -13,6 +13,8 @@ from app.utils.random import random_uuid
 from app.services.image import resolve_temp_image
 from app.types import GAME
 
+__all__ = ("router",)
+
 router = APIRouter(prefix="/track", tags=["track"])
 
 

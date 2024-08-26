@@ -10,9 +10,9 @@ from app.models.stat.fh5 import Performance, DetailedTunings, MajorParts, TestRe
 from pprint import pprint
 import asyncio
 
-__all__ = ("tuningRouter",)
+__all__ = ("router",)
 
-tuningRouter = APIRouter(prefix="/tuning", tags=["tuning"])
+router = APIRouter(prefix="/tuning", tags=["tuning"])
 
 
 class TuningCreate(BaseModel):
@@ -35,18 +35,19 @@ class TuningSearchQueryParam(BaseModel):
     limit: int = Field(default=30, ge=10, le=50)
 
 
-@tuningRouter.get("/{carID}")
+@router.get("/{carID}")
 async def get_many_tunings_of_car(
     carID: str, queryParam: TuningSearchQueryParam = Depends()
 ):
     pprint(queryParam)
+    # FIXME:
     decals = await Tuning_FH5.find_all().to_list()
     [await d.fetch_all_links() for d in decals]
     decalss = [d.to_simple_front() for d in decals]
     return decalss
 
 
-@tuningRouter.get("/{carID}/{tuningID}")
+@router.get("/{carID}/{tuningID}")
 async def get_one_tuning(carID: str, tuningID: str):
     tuning = await Tuning_FH5.get(tuningID, fetch_links=True)
 
@@ -56,7 +57,7 @@ async def get_one_tuning(carID: str, tuningID: str):
     return tuning.to_simple_front()
 
 
-@tuningRouter.post("")
+@router.post("")
 async def create_tuning(tuning: TuningCreate):
     pprint(tuning)
     # return 200
@@ -91,11 +92,11 @@ async def create_tuning(tuning: TuningCreate):
     return 200
 
 
-@tuningRouter.get("/edit")
+@router.get("/edit")
 async def get_tuning_for_edit():
     return 200
 
 
-@tuningRouter.delete("")
+@router.delete("")
 async def delete_tuning():
     return 200

@@ -1,7 +1,8 @@
 from fastapi import APIRouter
-from .decal.fh5 import decalRouter
-from .tuning.fh5 import tuningRouter
-from .track.fh5 import router as trackRouter
+from .decal import router as decalRouter
+from .tuning import router as tuningRouter
+from .track import router as trackRouter
+
 
 __all__ = ("router",)
 

@@ -1,10 +1,10 @@
-from fastapi import APIRouter
+from fastapi import APIRouter, Query, Depends
 
 from app.models.decal import Decal_FH5
 from app.models.car import Car as CarDB
 from app.models.tag import TagItem as TagDB
 from pydantic import BaseModel, Field
-from typing import List, Dict, Any, Optional
+from typing import List, Dict, Any, Optional, Literal
 from app.types.http import Url
 from pprint import pprint
 from bson import ObjectId
@@ -13,9 +13,9 @@ import asyncio
 from app.utils.random import random_uuid
 from app.services.image import resolve_temp_image
 
-__all__ = ("decalRouter",)
+__all__ = ("router",)
 
-decalRouter = APIRouter(prefix="/decal", tags=["decal"])
+router = APIRouter(prefix="/decal", tags=["decal"])
 
 
 class DecalCreate(BaseModel):
@@ -28,25 +28,44 @@ class DecalCreate(BaseModel):
     tags: List[str]  # tag id list
 
 
-@decalRouter.get("")
-async def get_decals():
+PAGINATION_LIMIT_DEFAULT = 30
+PAGINATION_ORDER_DEFAULT = "date"
+
+
+class PaginatedRequestParam(BaseModel):
+    page: Optional[int] = Query(1, description="page")
+    limit: Optional[int] = Query(PAGINATION_LIMIT_DEFAULT, description="limit on page")
+    order: Literal["date", "score", "replies"] = Query(
+        PAGINATION_ORDER_DEFAULT, description="sort option"
+    )
+
+
+@router.get("")
+async def get_decals(
+    query: PaginatedRequestParam = Depends(),
+    tags: List[str] = Query(None, description="list of tag ID"),
+):
+
+    print(f"{query=}")
+    print(f"{tags=}")
+    return
     decals = await Decal_FH5.find_all().to_list()
     [await d.fetch_all_links() for d in decals]
     decalss = [d.to_front() for d in decals]
     return decalss
 
 
-@decalRouter.get("/{decalID}")
-async def get_decals(decalID: str):
-    decal = await Decal_FH5.get(decalID, fetch_links=True)
+# @router.get("/{decalID}")
+# async def get_decals(decalID: str):
+#     decal = await Decal_FH5.get(decalID, fetch_links=True)
 
-    if not decal:
-        return 200
+#     if not decal:
+#         return 200
 
-    return decal.to_front_read()
+#     return decal.to_front_read()
 
 
-@decalRouter.post("")
+@router.post("")
 async def create_decal(decal: DecalCreate):
     pprint(decal)
     _new_ObjectID = ObjectId()
@@ -94,11 +113,11 @@ async def create_decal(decal: DecalCreate):
     return 200
 
 
-@decalRouter.get("/edit")
+@router.get("/edit")
 async def get_decal_for_edit():
     return 200
 
 
-@decalRouter.delete("")
+@router.delete("")
 async def delete_decal():
     return 200

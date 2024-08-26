@@ -7,7 +7,7 @@ from .data import router as dataRouter
 from .tag import router as tagRouter
 from .indexedDB import router as indexedDBRouter
 
-from .fh5 import router as FH5Router
+from .FH5 import router as FH5Router
 from .auth import router as AuthRouter
 from .dev import router as devRouter
 from .user import router as userRouter
