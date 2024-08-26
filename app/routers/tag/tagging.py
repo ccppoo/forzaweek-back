@@ -11,6 +11,7 @@ from beanie import DeleteRules
 from app.db import mongodb
 
 from app.models.tag import TagCategory, TagDescription, TagName, TagItem, Tagging
+from app.models.tag.base import i18nModelDump, i18nModelID
 from app.models.user import UserAuth
 from app.services.auth.deps import get_current_active_user, get_optional_active_user
 
@@ -46,7 +47,7 @@ class TaggingPostRequest(BaseModel):
 class TaggingReponse(BaseModel):
     # tags: List[TaggingReponseItem] = Field([])
     # 태그 id
-    tags: List[TaggingTagItem] = Field([])
+    tags: List[i18nModelID] = Field([])
 
 
 @router.get("/{post_type}/{subject_id}")
@@ -65,16 +66,19 @@ async def get_all_tags_of_subject_id(
     taggings = await Tagging.find(
         Tagging.subject_id == _subject_id,
         Tagging.post_type == post_type,
-        {"up_vote": {"$in": [current_user.user_id]}},
+        # {"tagger": {"$in": [current_user.user_id]}},
+        {"tagger": current_user.user_id},
     ).to_list()
-
-    tag_ids = []
+    items = []
 
     for tagging in taggings:
-        tag_ids.append({"id": str(tagging.tag.to_ref().id)})
-        # pprint(tagging)
+        tagItem = await TagItem.get(tagging.tag.to_ref().id)
+        await tagItem.fetch_link("name")
+        _name = i18nModelDump.from_i18n(tagItem.name)
+        i18nID = i18nModelID(id=str(tagItem.id), name=_name)
+        items.append(i18nID)
 
-    return TaggingReponse(tags=tag_ids).model_dump()
+    return TaggingReponse(tags=items).model_dump()
 
 
 @router.post("/{post_type}/{subject_id}")

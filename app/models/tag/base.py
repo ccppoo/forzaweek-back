@@ -51,6 +51,11 @@ class i18nModelDump(BaseModel):
         return i18nModelDump(**lang)
 
 
+class i18nModelID(BaseModel):
+    name: i18nModelDump
+    id: str
+
+
 class TagBase(Document):
 
     # 사용자가 바로 추가하는 태그는 lang : 'unknown'으로
