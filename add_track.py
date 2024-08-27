@@ -2,9 +2,8 @@ import yaml
 import asyncio
 from app.db.config import get_db_async, start_up_db
 from app.models.car import Car
-from app.models.car_stat import CarStat
 from app.models import Tuning, Car, CarTag, TrackTag, DifficultyTag, TuningTag
-from app.models.track import Track
+from app.models.FH5.race_route import RaceRoute
 from app.models import models
 from app.models.i18n import i18n, Locale
 from app.configs import dbSettings
@@ -32,7 +31,7 @@ async def get_tracks() -> list[Tuning]:
             course_i18n = i18n(
                 value=course["value"], ko=Locale(value=course["ko"]["value"])
             )
-            track = Track(name=name_i18n, type=type_i18n, course_type=course_i18n)
+            track = RaceRoute(name=name_i18n, type=type_i18n, course_type=course_i18n)
 
             tracks.append(track)
     return tracks
