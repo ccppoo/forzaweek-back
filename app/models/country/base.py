@@ -1,5 +1,3 @@
-"""Nation models."""
-
 from datetime import datetime
 from typing import List, Any, Optional
 from beanie import Document, Link

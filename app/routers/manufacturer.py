@@ -14,7 +14,9 @@ from app.models.manufacturer import (
     Manufacturer as ManufacturerDB,
     ManufacturerName,
 )
-from app.models.nation import Nation as NationDB, NationName
+
+from app.models.country import Country
+from app.models.country.i18n import CountryName
 import urllib
 import boto3
 import pathlib
@@ -92,7 +94,8 @@ async def add_manufacturer(manufacturer: ManufacturerCreate):
         return 403
 
     #  소속 국가 확인
-    origin_nation = await NationDB.get(manufacturer.origin)
+    # FIXME:
+    origin_nation = await Country.get(manufacturer.origin)
     if not origin_nation:
         return 403
 
@@ -221,13 +224,14 @@ async def update_manufacturer(itemID: str, manufacturer: ManufacturerEdit):
 
     new_origin = None
     if NEW_NATION:
-        new_origin = await NationDB.get(manufacturer.origin)
+        # FIXME:
+        new_origin = await Country.get(manufacturer.origin)
 
     # 이름 변경 있을 경우에만 새로 저장
     names: List[ManufacturerName] = ManufacturerName.RIGHT_JOIN(
         left=man_old.name, right=manufacturer.i18n
     )
-    old_names: List[NationName] = NationName.LEFT_ONLY(
+    old_names: List[CountryName] = CountryName.LEFT_ONLY(
         left=man_old.name, right=manufacturer.i18n
     )
 

@@ -7,8 +7,15 @@ from pprint import pprint
 from bson import ObjectId
 from beanie import DeleteRules
 
-from app.models.track.fh5 import Track_FH5
-from app.models.track.base import TrackName, TrackLiberalTranslation
+from app.models.FH5.race_route import RaceRoute
+
+
+from app.models.FH5.race_route.i18n import (
+    RaceRouteName,
+    RaceRouteDescription,
+    RaceRouteNameTranslated,
+)
+
 from app.utils.random import random_uuid
 from app.services.image import resolve_temp_image
 from app.types import GAME
@@ -34,9 +41,9 @@ class TrackCreate(BaseModel):
     fullPathImage: FullPathImage
     imageURLs: List[str] = Field(default=[])
     firstImage: Optional[str] = Field(default=None)
-    name: List[TrackName]
+    name: List[RaceRouteName]
     name_en: str
-    liberal_translation: Optional[List[TrackLiberalTranslation]] = Field(default=None)
+    liberal_translation: Optional[List[RaceRouteNameTranslated]] = Field(default=None)
     tags: List[str] = Field(default=[])
 
 
@@ -48,8 +55,8 @@ async def get_tracks():
 @router.get("/{name_en}")
 async def get_track(name_en: str):
     name_en_ = name_en.replace("_", " ")
-    trackDB: Union[Track_FH5, None] = await Track_FH5.find_one(
-        Track_FH5.name_en == name_en_,
+    trackDB: Union[RaceRoute, None] = await RaceRoute.find_one(
+        RaceRoute.name_en == name_en_,
         fetch_links=True,
     )
 
@@ -60,8 +67,8 @@ async def get_track(name_en: str):
 async def add_track(track: TrackCreate):
     pprint(track)
 
-    trackDB: Union[Track_FH5, None] = await Track_FH5.find_one(
-        Track_FH5.name_en == track.name_en,
+    trackDB: Union[RaceRoute, None] = await RaceRoute.find_one(
+        RaceRoute.name_en == track.name_en,
         fetch_links=True,
     )
 
@@ -111,7 +118,7 @@ async def add_track(track: TrackCreate):
         *[lt.insert() for lt in _liberalTranslation],
     )
 
-    trackDB: Track_FH5 = await Track_FH5(
+    trackDB: RaceRoute = await RaceRoute(
         imageURLs=uploaded_images,
         firstImage=first_image_url,
         name_en=track.name_en,
@@ -140,7 +147,7 @@ async def update_track():
 @router.delete("/{document_id}")
 async def delete_track(document_id: str):
 
-    trackDB: Union[Track_FH5, None] = await Track_FH5.get(
+    trackDB: Union[RaceRoute, None] = await RaceRoute.get(
         document_id,
         fetch_links=True,
     )

@@ -13,13 +13,16 @@ from app.models.manufacturer import (
 from app.models.car import (
     Car as CarDB,
     CarName,
-    CarShortName,
+    # CarShortName,
 )
-from app.models.stat.fh5 import CarBaseStat_FH5
 from app.utils.random import random_uuid
 from app.services.image import resolve_temp_image
 
 router = APIRouter(prefix="/car", tags=["car"])
+
+
+class CarShortName(BaseModel):
+    pass  # temp
 
 
 class Nation(BaseModel):
@@ -50,7 +53,7 @@ class CarCreate(BaseModel):
     short_name_en: str
     short_name: List[CarShortName]
 
-    fh5: Optional[CarBaseStat_FH5]
+    # fh5: Optional[CarBaseStat_FH5]
 
 
 class CarEdit(BaseModel):
@@ -71,7 +74,7 @@ class CarEdit(BaseModel):
     short_name_en: str
     short_name: List[CarShortName]
 
-    fh5: Optional[CarBaseStat_FH5]
+    # fh5: Optional[CarBaseStat_FH5]
     # FUTURE: Forza Horizon 4 support
     # fh4: Optional[CarBaseStat_FH4]
 

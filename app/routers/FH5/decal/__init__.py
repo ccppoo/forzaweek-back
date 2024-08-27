@@ -1,6 +1,7 @@
 from fastapi import APIRouter, Query, Depends
 
-from app.models.decal import Decal_FH5
+from app.models.FH5.decal import Decal as Decal_FH5
+
 from app.models.car import Car as CarDB
 from app.models.tag import TagItem as TagDB
 from pydantic import BaseModel, Field
@@ -9,7 +10,7 @@ from app.types.http import Url
 from pprint import pprint
 from bson import ObjectId
 import asyncio
-
+from app.models.FH5.decal import Decal
 from app.utils.random import random_uuid
 from app.services.image import resolve_temp_image
 
@@ -31,6 +32,8 @@ class DecalCreate(BaseModel):
 PAGINATION_LIMIT_DEFAULT = 30
 PAGINATION_ORDER_DEFAULT = "date"
 
+TEST_USER_ID = "c786e13e-eeb8-5299-b6cc-4b9811101061"
+
 
 class PaginatedRequestParam(BaseModel):
     page: Optional[int] = Query(1, description="page")
@@ -45,7 +48,7 @@ async def get_decals(
     query: PaginatedRequestParam = Depends(),
     tags: List[str] = Query(None, description="list of tag ID"),
 ):
-
+    # TODO: 여기서 조건에 맞는 데칼 보내주기
     print(f"{query=}")
     print(f"{tags=}")
     return
@@ -53,6 +56,17 @@ async def get_decals(
     [await d.fetch_all_links() for d in decals]
     decalss = [d.to_front() for d in decals]
     return decalss
+
+
+@router.get("/test")
+async def test_decal():
+
+    decal = await Decal(
+        user_id=TEST_USER_ID,
+        share_code="999666333",
+        gamer_tag="optims1873",
+    ).create()
+    return decal.model_dump()
 
 
 # @router.get("/{decalID}")
@@ -98,6 +112,7 @@ async def create_decal(decal: DecalCreate):
     print(f"{uploaded_images=}")
 
     # 4. 저장
+    # FIXME:
     decal_FH5 = Decal_FH5(
         id=_new_ObjectID,
         share_code=decal.share_code,

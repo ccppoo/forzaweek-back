@@ -1,12 +1,18 @@
 from fastapi import APIRouter, Depends
 
-from app.models.tuning import Tuning_FH5
+
+from app.models.FH5.tuning import Tuning as Tuning_FH5
 from app.models.car import Car as CarDB
 from app.models.tag import TagItem as TagDB
 
 from pydantic import BaseModel, Field
 from typing import List, Dict, Any, Optional
-from app.models.stat.fh5 import Performance, DetailedTunings, MajorParts, TestReadings
+from app.models.FH5.components.car_details import (
+    Performance,
+    DetailedTunings,
+    MajorParts,
+    TestReadings,
+)
 from pprint import pprint
 import asyncio
 

@@ -35,7 +35,7 @@ app.add_middleware(
 
 app.include_router(devRouter)
 app.include_router(imageRouter)
-app.include_router(nationRouter)
+app.include_router(countryRouter)
 app.include_router(manufacturerRouter)
 app.include_router(carRouter)
 app.include_router(dataRouter)

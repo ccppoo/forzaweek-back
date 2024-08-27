@@ -3,14 +3,15 @@ from fastapi import APIRouter
 from pydantic import BaseModel
 from typing import List, Dict, Any, Optional
 from pprint import pprint
-from app.models.nation import Nation as NationDB
+
+from app.models.country import Country
 from app.models.manufacturer import Manufacturer as ManufacturerDB
 from app.models.car import Car as CarDB
 from app.models.tag import TagItem as TagDB
 
 # from app.models.tag import TagItemCategory as TagCategoryDB
-from app.models.decal import Decal_FH5
-from app.models.tuning import Tuning_FH5
+from app.models.FH5.decal import Decal as Decal_FH5
+from app.models.FH5.tuning import Tuning as Tuning_FH5
 
 # from app.models.decal import Decal as DecalDB
 # from app.models.tuning import Tuning as TuningDB
@@ -31,7 +32,7 @@ class DataStatus(BaseModel):
 @router.get("/status")
 async def get_data_status() -> DataStatus:
 
-    naiton_count = await NationDB.count()
+    naiton_count = await Country.count()
     manufac_count = await ManufacturerDB.count()
     car_count = await CarDB.count()
     tag_count = await TagDB.count()

@@ -13,13 +13,12 @@ from beanie import WriteRules, DeleteRules
 from app.models.car import (
     Car as CarDB,
     CarName,
-    CarShortName,
 )
-from app.models.track.fh5 import Track_FH5
+from app.models.FH5.race_route import RaceRoute
 
 from app.models.car import Car as CarDB
 from app.models.manufacturer import Manufacturer as ManufacturerDB
-from app.models.nation import Nation as NationDB
+from app.models.country import Country
 from app.utils.random import random_uuid
 import asyncio
 
@@ -81,8 +80,8 @@ async def get_all_cars_images():
 
 @router.get("/nation")
 async def get_nation_db():
-
-    nations = await NationDB.find_all().to_list()
+    # FIXME:
+    nations = await Country.find_all().to_list()
     [await nation.fetch_all_links() for nation in nations]
 
     a = [nation.to_indexedDB() for nation in nations]
@@ -103,7 +102,8 @@ async def get_manufacturer_db():
 
 @router.get("/track2")
 async def get_track_db():
-    tracks = await Track_FH5.find_all().to_list()
+    # FIXME:
+    tracks = await RaceRoute.find_all().to_list()
     [await t.fetch_all_links() for t in tracks]
     a = [t.to_indexedDB() for t in tracks]
     utc_ms = timestamp_utc_ms()
@@ -113,8 +113,8 @@ async def get_track_db():
 
 @router.get("/track2/image")
 async def get_track_image_db():
-
-    tracks = await Track_FH5.find_all().to_list()
+    # FIXME:
+    tracks = await RaceRoute.find_all().to_list()
     [await t.fetch_all_links() for t in tracks]
     a = [t.to_indexedDB_image() for t in tracks]
     utc_ms = timestamp_utc_ms()
