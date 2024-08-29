@@ -9,4 +9,3 @@ class ManufacturerBase(DocumentBase):
 
     class Settings:
         name = "ManufacturerBase"
-        is_root = True

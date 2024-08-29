@@ -61,6 +61,5 @@ class CountryBase(Document):
     #     }
 
     class Settings:
-        name = "CountryBase"
-        is_root = True
+        name = "Country"
         use_state_management = True

@@ -7,10 +7,12 @@ from .user import dbInit as userDBInit
 from .comment import dbInit as commentDBInit
 from .board import dbInit as boardDBInit
 from .FH5 import dbInit as FH5DBInit
+from .country import dbInit as countryDBInit
 
 __all__ = ["models"]
 
 models = (
+    *countryDBInit,
     *dbStateDBInit,
     *i18nDBInit,
     *manufacturerDBInit,

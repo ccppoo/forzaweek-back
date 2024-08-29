@@ -11,6 +11,8 @@ __all__ = ("Country",)
 class Country(HasSingleImage, CountryBase):
     """Country DB representation."""
 
+    # image_url: Url = Field()
+    en: str
     name: List[Link[CountryName]] = Field([])
 
     # @property
