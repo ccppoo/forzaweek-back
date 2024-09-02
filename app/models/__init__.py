@@ -8,13 +8,15 @@ from .comment import dbInit as commentDBInit
 from .board import dbInit as boardDBInit
 from .FH5 import dbInit as FH5DBInit
 from .country import dbInit as countryDBInit
+from .car import dbInit as carBaseDBInit
 
 __all__ = ["models"]
 
 models = (
     *countryDBInit,
-    *dbStateDBInit,
     *i18nDBInit,
+    *carBaseDBInit,
+    *dbStateDBInit,
     *manufacturerDBInit,
     *tagDBInit,
     *userDBInit,

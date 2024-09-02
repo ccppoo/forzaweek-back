@@ -15,6 +15,7 @@ if TYPE_CHECKING:
 class Car(ForzaHorizon.BasedOnCar, HasMultipleImages, CarBaseStat, FH5DocumentBase):
 
     # base_car: Link[CarOriginal]
+    # edition -> Forizon Edition, Anniversary, 등
 
     # image_urls: List[Url] = Field(default=[])
     # first_image: Optional[Url]

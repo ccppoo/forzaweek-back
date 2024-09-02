@@ -15,8 +15,8 @@ __all__ = ("Car",)
 
 class Car(HasMultipleImages, CarBase):
 
-    # images: List[Url]
-    # first_image: Optional[Url]
+    # image_urls: List[Url] = Field(default=[])
+    # first_image: Optional[Url] = Field(default=None)
     name: List[Link[CarName]] = Field([])
     alias: List[Link[CarAlias]] = Field([])
 

@@ -15,6 +15,36 @@ class Country(HasSingleImage, CountryBase):
     en: str
     name: List[Link[CountryName]] = Field([])
 
+    async def as_json(self):
+        if self.links_not_fetched:
+            await self.fetch_all_links()
+        names = self._prepare_name()
+        return {
+            "id": self.id_str,
+            "image_url": self.image_url,
+            "name": names,
+            "en": self.en,
+        }
+
+    def _prepare_name(self) -> dict:
+        """
+        returns {
+            'en' : 'Korea',
+            'ko' : '한국', ...
+        }
+        """
+        names = {}
+        for _name in self.name:
+            names.update(_name.as_lang_key())
+        return names
+
+    @property
+    def links_not_fetched(self) -> bool:
+        for _name in self.name:
+            if isinstance(_name, Link):
+                return True
+        return False
+
     # @property
     # def created(self) -> datetime | None:
     #     """Datetime car was created from ID."""

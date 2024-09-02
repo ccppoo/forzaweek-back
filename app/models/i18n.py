@@ -53,6 +53,13 @@ class i18n(Document):
     def to_front(self):
         return self.model_dump(include=["value", "lang"])
 
+    def as_lang_key(self):
+        """
+
+        return {"en" : "Ford"}
+        """
+        return {self.lang: self.value}
+
     class Settings:
         is_root = True
 

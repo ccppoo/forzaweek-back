@@ -8,7 +8,7 @@ from .tuning import *
 
 
 class StatBase(BaseModel):
-    PI: int = Field(ge=100, le=999)
+    PI: int = Field(ge=100, le=999, alias="pi")
     performance: Performance
 
 

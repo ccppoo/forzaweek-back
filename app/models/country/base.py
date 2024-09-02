@@ -12,6 +12,10 @@ __all__ = ("CountryBase",)
 class CountryBase(Document):
     """Country DB representation."""
 
+    @property
+    def id_str(self) -> str:
+        return str(self.id)
+
     # @property
     # def created(self) -> datetime | None:
     #     """Datetime car was created from ID."""
