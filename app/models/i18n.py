@@ -2,7 +2,7 @@ from __future__ import annotations
 from abc import ABCMeta, abstractmethod
 from beanie import Document, Indexed
 from pydantic import BaseModel, Field
-from typing import List, Optional
+from typing import List, Optional, Tuple
 
 __all__ = ("i18n", "dbInit")
 
@@ -59,6 +59,17 @@ class i18n(Document):
         return {"en" : "Ford"}
         """
         return {self.lang: self.value}
+
+    def seperate_lang_key(self) -> Tuple[str, str]:
+        return self.lang, self.value
+
+    @classmethod
+    def build_multi_value(cls, names: dict, kv: i18n) -> dict:
+        lang, value = kv.seperate_lang_key()
+        if not names.get(lang):
+            names[lang] = []
+        names[lang].append(value)
+        return names
 
     class Settings:
         is_root = True
