@@ -5,7 +5,7 @@ from ..base import FH5DocumentBase
 
 from beanie import Link
 from pydantic import BaseModel, Field
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, List, Literal
 from ..components.car_details import CarBaseStat
 
 if TYPE_CHECKING:
@@ -24,8 +24,40 @@ class Car(ForzaHorizon.BasedOnCar, HasMultipleImages, CarBaseStat, FH5DocumentBa
     # meta: Meta
     # performance: Performance
 
+    async def as_json(self, *, base_car_as_id: bool = True):
+
+        base_car = str(self.base_car.to_ref().id)
+        if not base_car_as_id and not self.links_not_fetched:
+            await self.fetch_all_links()
+            base_car = await self.base_car.as_json()
+
+        return {
+            "id": self.id_str,
+            "baseCar": base_car,
+            "PI": self.PI,
+            "meta": self.meta,
+            "imageURLs": self.image_urls,
+            "performance": self.performance,
+        }
+
+    async def indexedDB_car(self):
+        _car = await self.as_json()
+        _car.pop("imageURLs")
+        return _car
+
+    def indexedDB_Images_sync(self):
+        return {
+            "id": self.id_str,
+            "imageURLs": self.image_urls,
+        }
+
+    @property
+    def links_not_fetched(self) -> bool:
+        if isinstance(self.base_car, Link):
+            return True
+        return False
+
     # TODO: 세부튜닝, 성능 수치, PI field, FH5 Meta 추가
 
     class Settings:
         name = "FH5.Car"
-        is_root = True

@@ -7,9 +7,5 @@ __all__ = ("ManufacturerBase",)
 
 class ManufacturerBase(DocumentBase):
 
-    @property
-    def id_str(self) -> str:
-        return str(self.id)
-
     class Settings:
-        name = "ManufacturerBase"
+        pass
