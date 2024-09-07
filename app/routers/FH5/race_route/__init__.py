@@ -7,14 +7,15 @@ from pprint import pprint
 from bson import ObjectId
 from beanie import DeleteRules
 
-from app.models.FH5.race_route import RaceRoute
-
+from app.models.FH5.race_route import *
+from app.models.FH5.race_route import RaceRouteFH5
 
 from app.models.FH5.race_route.i18n import (
     RaceRouteName,
     RaceRouteDescription,
     RaceRouteNameTranslated,
 )
+from beanie import DeleteRules, WriteRules
 
 from app.utils.random import random_uuid
 from app.services.image import resolve_temp_image
@@ -22,7 +23,7 @@ from app.types import GAME
 
 __all__ = ("router",)
 
-router = APIRouter(prefix="/track", tags=["track"])
+router = APIRouter(prefix="/raceroute", tags=["race route"])
 
 
 class FullPathImage(BaseModel):
@@ -32,45 +33,33 @@ class FullPathImage(BaseModel):
     )  # 트랙 경로가 너무 큰 경우 한 번에 사진에 담을 수 없어서 zoom_out과 동일 할 때 사용
 
 
-class TrackCreate(BaseModel):
-    game: GAME = Field(default="FH5")
-    category: str
-    format: str
-    laps: int = Field(gte=0, le=10)
-    world: str
-    fullPathImage: FullPathImage
-    imageURLs: List[str] = Field(default=[])
-    firstImage: Optional[str] = Field(default=None)
-    name: List[RaceRouteName]
-    name_en: str
-    liberal_translation: Optional[List[RaceRouteNameTranslated]] = Field(default=None)
-    tags: List[str] = Field(default=[])
-
-
 @router.get("")
 async def get_tracks():
     pass
 
 
 @router.get("/{name_en}")
-async def get_track(name_en: str):
+async def get_race_route(name_en: str):
     name_en_ = name_en.replace("_", " ")
-    trackDB: Union[RaceRoute, None] = await RaceRoute.find_one(
-        RaceRoute.name_en == name_en_,
-        fetch_links=True,
-    )
-
-    return trackDB.to_front_read2()
+    RaceRouteBase
+    # trackDB: Union[RaceRoute, None] = await RaceRoute.find_one(
+    #     RaceRoute.name_en == name_en_,
+    #     fetch_links=True,
+    # )
+    return
+    # return trackDB.to_front_read2()
 
 
 @router.post("")
-async def add_track(track: TrackCreate):
-    pprint(track)
+async def add_track(raceRouteFH5: RaceRouteFH5):
+    pprint(raceRouteFH5)
+    await raceRouteFH5.insert(link_rule=WriteRules.WRITE)
+    return
 
-    trackDB: Union[RaceRoute, None] = await RaceRoute.find_one(
-        RaceRoute.name_en == track.name_en,
-        fetch_links=True,
-    )
+    # trackDB: Union[RaceRoute, None] = await RaceRoute.find_one(
+    #     RaceRoute.name_en == track.name_en,
+    #     fetch_links=True,
+    # )
 
     # # 1. 이미 존재하는 차
     # if carDB is not None:
@@ -147,10 +136,11 @@ async def update_track():
 @router.delete("/{document_id}")
 async def delete_track(document_id: str):
 
-    trackDB: Union[RaceRoute, None] = await RaceRoute.get(
-        document_id,
-        fetch_links=True,
-    )
+    return
+    # trackDB: Union[RaceRoute, None] = await RaceRoute.get(
+    #     document_id,
+    #     fetch_links=True,
+    # )
 
     if trackDB is None:
         return

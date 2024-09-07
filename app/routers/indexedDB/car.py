@@ -15,9 +15,9 @@ router = APIRouter(tags=["car"])
 @router.get("")
 async def car_indexedDB():
 
-    mans = await CarDB.find_all().to_list()
+    cars = await CarDB.find_all().to_list()
     return {
         "version": "abc",
         "lastUpdate": timestamp_utc_ms(),
-        "data": [await man.as_json() for man in mans],
+        "data": [await car.as_json() for car in cars],
     }

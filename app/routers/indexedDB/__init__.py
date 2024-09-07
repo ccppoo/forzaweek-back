@@ -9,18 +9,7 @@ from datetime import datetime
 from bson import ObjectId
 from beanie import WriteRules, DeleteRules
 
-
-from app.models.car import (
-    Car as CarDB,
-    CarName,
-)
-from app.models.FH5.race_route import RaceRoute
-
-from app.models.car import Car as CarDB
 from app.models.manufacturer import Manufacturer as ManufacturerDB
-from app.models.country import Country
-from app.utils.random import random_uuid
-import asyncio
 
 from app.services.image import resolve_temp_image
 from app.utils.time import timestamp_utc_ms
