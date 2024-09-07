@@ -2,7 +2,10 @@ from pydantic import BaseModel
 from typing import Optional
 from app.types.http import Url
 
-__all__ = ("TrackFullPathImage",)
+__all__ = (
+    "TrackFullPathImage",
+    "FullPathImage",
+)
 
 
 class FullPathImage(BaseModel):
