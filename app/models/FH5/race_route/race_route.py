@@ -31,6 +31,7 @@ class RaceRouteFH5(RaceRouteBase):
 
     # full_path_image: FullPathImage
     # coordinate_images: List[CoordinateImage] = Field([])
+    # icon_url : Url
 
     # name: List[Link[RaceRouteName]] = Field([])
     # name_translated: List[Link[RaceRouteNameTranslated]] = Field([])
@@ -55,6 +56,7 @@ class RaceRouteFH5(RaceRouteBase):
             "imageURLs": self.image_urls,
             "fullPathImage": self.full_path_image,
             "coordinateImages": self.coordinate_images,
+            "iconURL": self.icon_url,
             "world": self.world,
             "laps": self.laps,
             "category": self.category,
@@ -70,11 +72,15 @@ class RaceRouteFH5(RaceRouteBase):
         return _race_route
 
     def indexedDB_Images_sync(self):
+
+        coordiniateImages = [ci.as_json_sync() for ci in self.coordinate_images]
+
         return {
             "id": self.id_str,
             "imageURLs": self.image_urls,
             "fullPathImage": self.full_path_image,
-            "coordinateImages": self.coordinate_images,
+            "coordinateImages": coordiniateImages,
+            "iconURL": self.icon_url,
         }
 
     @property

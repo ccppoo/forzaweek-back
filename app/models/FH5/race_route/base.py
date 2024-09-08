@@ -8,6 +8,7 @@ from .i18n import RaceRouteName, RaceRouteDescription, RaceRouteNameTranslated
 from ..components.image.coordinate_image import CoordinateImage
 from ..components.image.full_path_image import FullPathImage
 from app.models.i18n import i18n as I18N
+from app.types.http import Url
 
 
 class RaceRouteBase(HasMultipleImages, FH5DocumentBase):
@@ -16,6 +17,7 @@ class RaceRouteBase(HasMultipleImages, FH5DocumentBase):
     # first_image: Optional[Url] = Field(default=None)
     full_path_image: FullPathImage
     coordinate_images: List[CoordinateImage] = Field([])
+    icon_url: Url
 
     name: List[Link[RaceRouteName]] = Field([])
     name_translated: List[Link[RaceRouteNameTranslated]] = Field([])

@@ -18,3 +18,6 @@ class CoordinateImage(BaseModel):
     x: float
     y: float
     image_url: Url
+
+    def as_json_sync(self):
+        return {"x": self.x, "y": self.y, "imageURL": self.image_url}
