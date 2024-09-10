@@ -16,7 +16,7 @@ from app.services.image import resolve_temp_image
 from app.types.http import Url
 from app.models.FH5.components.car_details import CarBaseStat
 
-router = APIRouter(prefix="/car", tags=["car"])
+router = APIRouter(prefix="", tags=["car"])
 
 
 class CarShortName(BaseModel):

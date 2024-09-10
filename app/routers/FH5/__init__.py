@@ -9,7 +9,7 @@ __all__ = ("router",)
 
 router = APIRouter(prefix="/FH5", tags=["FH5"])
 
-router.include_router(decalRouter)
-router.include_router(tuningRouter)
-router.include_router(raceRouteRouter)
-router.include_router(carRouter)
+router.include_router(decalRouter, prefix="/decal")
+router.include_router(tuningRouter, prefix="/tuning")
+router.include_router(raceRouteRouter, prefix="/raceroute")
+router.include_router(carRouter, prefix="/car")

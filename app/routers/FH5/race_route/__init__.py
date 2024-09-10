@@ -23,7 +23,7 @@ from app.types import GAME
 
 __all__ = ("router",)
 
-router = APIRouter(prefix="/raceroute", tags=["race route"])
+router = APIRouter(prefix="", tags=["race route"])
 
 
 class FullPathImage(BaseModel):

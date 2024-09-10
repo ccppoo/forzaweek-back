@@ -18,7 +18,7 @@ import asyncio
 
 __all__ = ("router",)
 
-router = APIRouter(prefix="/tuning", tags=["tuning"])
+router = APIRouter(prefix="", tags=["tuning"])
 
 
 class TuningCreate(BaseModel):

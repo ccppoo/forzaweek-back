@@ -18,6 +18,16 @@ __all__ = ("Tagging",)
 
 
 class Tagging(Document):
+    """
+    tagging은 사용자 각자 개인이 가지고 있는 것이 아니라
+
+    [Post + Tag] <- 태그에 추가한 사람 목록 list에 추가
+
+    하는 형식으로 저장된다.
+
+    각자 개인이 어떤 게시물에 어떤 Tagging을 했는지 확인하기 위해서는 쿼리를 다시 해야한다.
+    """
+
     # id
     subject_id: Annotated[PydanticObjectId, Indexed()]  # 태깅하는 문서
     post_type: Annotated[

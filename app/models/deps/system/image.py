@@ -11,8 +11,8 @@ __all__ = (
 
 class HasMultipleImages(BaseModel):
 
-    image_urls: List[Url] = Field(default=[])
-    first_image: Optional[Url] = Field(default=None)
+    image_urls: List[Url] = Field(default=[], alias="imageUrls")
+    # first_image: Optional[Url] = Field(default=None)
 
 
 class HasSingleImage(BaseModel):

@@ -13,7 +13,7 @@ from app.services.auth.deps import get_current_active_user, get_optional_active_
 #     from app.models.user import UserAuth
 from pprint import pprint
 
-router = APIRouter(prefix="/tags", tags=["tags"])
+router = APIRouter(prefix="", tags=["tags"])
 
 
 class TagName(BaseModel):
