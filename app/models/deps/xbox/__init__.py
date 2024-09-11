@@ -7,8 +7,8 @@ class SharingCreativeWorks(ForzaHorizon.HasShareCode, HasGamerTag):
     pass
 
 
-class ForzaHorizonDecal(ForzaHorizon.BasedOnCar, SharingCreativeWorks):
-    pass
+# class ForzaHorizonDecal(ForzaHorizon.BasedOnCar, SharingCreativeWorks):
+#     pass
 
 
 class ForzaHorizonTuning(ForzaHorizon.BasedOnCar, SharingCreativeWorks):

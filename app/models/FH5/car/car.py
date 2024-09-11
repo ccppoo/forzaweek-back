@@ -5,15 +5,18 @@ from ..base import FH5DocumentBase
 
 from beanie import Link
 from pydantic import BaseModel, Field
-from typing import TYPE_CHECKING, List, Literal
+from typing import TYPE_CHECKING, List, Literal, Optional
 from ..components.car_details import CarBaseStat
+from app.models.car import Car
 
-if TYPE_CHECKING:
-    from app.models.car import Car as CarOriginal
+# if TYPE_CHECKING:
+#     from app.models.car import Car as CarOriginal
 
 
-class Car(ForzaHorizon.BasedOnCar, HasMultipleImages, CarBaseStat, FH5DocumentBase):
+class Car_FH5(HasMultipleImages, CarBaseStat, FH5DocumentBase):
 
+    base_car: Link[Car]
+    edition: Optional[str] = Field(None, description="anniversary, forza, donut")
     # base_car: Link[CarOriginal]
     # edition -> Forizon Edition, Anniversary, 등
 
@@ -60,4 +63,4 @@ class Car(ForzaHorizon.BasedOnCar, HasMultipleImages, CarBaseStat, FH5DocumentBa
     # TODO: 세부튜닝, 성능 수치, PI field, FH5 Meta 추가
 
     class Settings:
-        name = "FH5.Car"
+        name = "FH5_Car"

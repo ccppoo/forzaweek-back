@@ -43,7 +43,9 @@ class ImageBlockData(PostBlockDataBase):
     data: _ImageBlock
 
     def update_image_key(self, user: UserAuth):
+        print(f"{self.data.file=}")
         if self.data.file.is_temp_key:
+            print(f"{self.data.file} is temp : {self.data.file.is_temp_key}")
             # 임시로 올린 이미지의 경우 upload/user -> board/post 으로 업로드
             new_key = update_file_key(self.data.file.url, user)
             self.data.file.url = new_key

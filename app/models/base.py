@@ -8,7 +8,7 @@ from pprint import pprint
 from beanie.odm.actions import after_event
 from beanie.odm.actions import Insert, Save, Replace, Update, SaveChanges
 
-__all__ = ("DecalBase", "DecalName")
+__all__ = ("DocumentBase",)
 
 
 class DocumentBase(Document):

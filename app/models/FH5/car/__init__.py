@@ -1,3 +1,3 @@
-from .car import Car
+from .car import Car_FH5
 
-dbInit = (Car,)
+dbInit = (Car_FH5,)

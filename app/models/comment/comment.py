@@ -108,10 +108,10 @@ class VotableMainComment(CommentBase, Votable, Replyable[VotableSubComment]):
     # subComments: List[Link[VotableComment]] = Field(default=[])
 
     def to_front(self, user: UserAuth | None = None):
+        # TODO: mongoDB aggretion으로
         # 반드시 fetch link 이후에 호출할 것
         voted = {"up": [], "down": []}
         if user:
-
             if user.user_id in self.up_voters:
                 voted["up"].append(user.user_id)
             if user.user_id in self.down_voters:

@@ -49,5 +49,5 @@ class RaceRouteBase(HasMultipleImages, FH5DocumentBase):
         return descriptions
 
     class Settings:
-        name = "FH5.RaceRoute"
+        name = "FH5_RaceRoute"
         is_root = True

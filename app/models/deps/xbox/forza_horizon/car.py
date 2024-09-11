@@ -12,5 +12,5 @@ __all__ = ("BasedOnCar",)
 class BasedOnCar(BaseModel):
     # based on car
 
-    base_car: Link[CarOriginal]
+    car: Link[CarOriginal]
     edition: Optional[str] = Field(None, description="anniversary, forza, donut")
