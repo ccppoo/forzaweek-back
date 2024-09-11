@@ -10,7 +10,7 @@ from beanie import DeleteRules, WriteRules
 from app.models.manufacturer import (
     Manufacturer as ManufacturerDB,
 )
-from app.models.FH5.car import Car as Car_FH5
+from app.models.FH5.car import Car_FH5
 from app.utils.random import random_uuid
 from app.services.image import resolve_temp_image
 from app.types.http import Url
@@ -38,6 +38,13 @@ async def get_car():
     car = await Car_FH5.get("66d69c63a368e84afdbb633f")
     _car = await car.as_json()
     return _car
+
+
+@router.get("/{car_FH5_ID}")
+async def get_car_by_id(car_FH5_ID: str):
+    # 66d6a4f32090a29cc017fbb9
+    car = await Car_FH5.get(car_FH5_ID, fetch_links=True)
+    return await car.as_json()
 
 
 @router.post("")
