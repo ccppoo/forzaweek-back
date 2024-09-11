@@ -5,5 +5,8 @@ __all__ = ("R2_ObjectMetaData",)
 
 
 class R2_ObjectMetaData(BaseModel):
-    upload_user_email: str  # public user id
-    upload_user_oid: Optional[str] = Field(None)  # private user id (user doc id)
+    email: str
+    sub: str
+    # user_email: str  # public user id
+    # user_oid: Optional[str] = Field(None)  # private user id (user doc id)
+    # user_sub: str
