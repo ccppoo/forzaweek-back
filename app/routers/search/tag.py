@@ -95,3 +95,41 @@ async def search_tag_by_keyword(keyword: Optional[str] = None):
         "tags": tag_items,
     }
     return data
+
+
+@router.get("/category")
+async def search_tag_category_by_keyword(keyword: Optional[str] = None):
+    print(f"{keyword=}")
+    if not keyword:
+        tag_cats = await TagCategoryDB.all(limit=20).to_list()
+        return [await tc.as_json() for tc in tag_cats]
+
+    tags = await TagName.find_many(
+        {"value": {"$regex": f"^.*{keyword}.*$", "$options": "i"}},
+    ).to_list()
+    tag_ids = [t.id for t in tags]
+
+    query1 = {"name.$id": {"$in": tag_ids}}
+
+    tagCats = await TagCategoryDB.find_many(query1).to_list()
+
+    return [await cat.as_json() for cat in tagCats]
+
+
+@router.get("/category/id")
+async def search_tag_category_by_keyword(keyword: Optional[str] = None):
+    print(f"{keyword=}")
+    if not keyword:
+        tag_cats = await TagCategoryDB.all(limit=20).to_list()
+        return [await tc.as_json() for tc in tag_cats]
+
+    tags = await TagName.find_many(
+        {"value": {"$regex": f"^.*{keyword}.*$", "$options": "i"}},
+    ).to_list()
+    tag_ids = [t.id for t in tags]
+
+    query1 = {"name.$id": {"$in": tag_ids}}
+
+    tagCats = await TagCategoryDB.find_many(query1).to_list()
+
+    return [str(cat.id_str) for cat in tagCats]
