@@ -1,6 +1,6 @@
 from __future__ import annotations
-from fastapi import APIRouter, Path, Query
-from pydantic import BaseModel, Field
+from fastapi import APIRouter, Path, Query, Body
+from pydantic import BaseModel, Field, model_validator
 import asyncio
 
 from typing import List, Dict, Any, Optional, Annotated, Literal
@@ -10,23 +10,12 @@ from beanie import DeleteRules
 from app.services.image import resolve_temp_image
 
 from app.models.tag import TagDescription, TagName, TagItem
-from app.models.tag import TagCategory
+
+# from app.models.tag import TagCategory
 
 __all__ = ("router",)
 
 router = APIRouter(prefix="/tag", tags=["tag", "tagItem"])
-
-
-class TagCreate(BaseModel):
-
-    imageURL: Optional[str] = Field(default=None)
-    name: List[TagName]
-    name_en: str
-
-    description: List[TagDescription]
-    kind: str
-
-    mergedTo: Optional[str] = Field(default=None)
 
 
 class TagEdit(BaseModel):
@@ -46,12 +35,67 @@ class TagEdit(BaseModel):
     mergedFrom: List[str] = Field(default=[])
 
 
+class TagCreate(BaseModel):
+
+    imageURL: Optional[str] = Field(default=None)
+    name: List[TagName]
+    name_en: str
+    category: str  # category ID
+    description: List[TagDescription]
+    color: str
+
+    @model_validator(mode="before")
+    @classmethod
+    def model_validate(cls, data: dict) -> dict:
+        names = []
+        name_en = None
+        for lang, value in data["name"].items():
+            names.append(TagName(lang=lang, value=value))
+            if lang == "en":
+                name_en = value
+
+        descriptions = []
+
+        if decs := data.get("description"):
+            for lang, value in decs.items():
+                descriptions.append(TagDescription(lang=lang, value=value))
+
+        data["name"] = names
+        data["description"] = descriptions
+        return {**data, "name_en": name_en}
+
+
+class TagEdit(TagCreate):
+    mergedTo: Optional[str] = Field(default=None)
+    mergedFrom: Optional[List[str]] = Field(default=[])
+    parent: Optional[str] = Field(default=None)
+    children: Optional[List[str]] = Field(default=[])
+
+
 async def get_all_tags(kind: Optional[str] = None):
     # FIXME:
     return
 
     # a = [tag.to_front() for tag in tags]
     # return a
+
+
+@router.post("")
+async def add_tag(tag: Annotated[TagCreate, Body()]):
+
+    pprint(tag)
+
+    [await n.create() for n in tag.name]
+    [await d.create() for d in tag.description]
+    await TagItem(
+        name=tag.name,
+        name_en=tag.name_en,
+        image_url=tag.imageURL,
+        description=tag.description,
+        category=tag.category,
+    ).create()
+
+    return
 
 
 @router.get("/{tagID}")
@@ -119,54 +163,6 @@ async def get_tag_relations(
             return tag.get_vertical_relation()
         case None:
             return tag.get_all_relations()
-
-
-@router.post("/create")
-async def add_tag(tag: TagCreate):
-
-    tagDB = await TagItem.find_one(
-        TagItem.name_en == tag.name_en,
-        fetch_links=True,
-    )
-
-    # 1. 이미 존재하는 태그
-    if tagDB:
-        return
-
-    # 2. 태그 종류 조회
-    tag_kind = await TagCategoryDB.get(tag.kind)
-    if not tag_kind:
-        return
-
-    # 3. 사진
-    imageHttpUrl = None
-    if tag.imageURL:
-        tagKindImageName = f"tag_kind_{tag.name_en}_icon"
-        imageHttpUrl = resolve_temp_image(
-            "tagkind", tag.imageURL, tagKindImageName, tag.name_en
-        )
-
-    # 4. 이름 저장
-    tag_description = [td for td in tag.description if not td.is_empty()]
-    tag_names = await asyncio.gather(
-        *[n.insert() for n in tag.name],
-    )
-    tag_descriptions = await asyncio.gather(*[td.insert() for td in tag_description])
-
-    # 당장 ㄴㄴ
-    # parent
-    # children
-    # mergedTo
-    # mergedFrom
-    tagDB: TagItem = await TagItem(
-        name=tag_names,
-        name_en=tag.name_en,
-        description=tag_descriptions,
-        imageURL=imageHttpUrl,
-        kind=tag_kind,
-    ).insert()
-
-    return tagDB.model_dump()
 
 
 @router.post("/edit/{itemID}")

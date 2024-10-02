@@ -1,6 +1,6 @@
 from __future__ import annotations
-from fastapi import APIRouter, Path, Query
-from pydantic import BaseModel, Field
+from fastapi import APIRouter, Path, Query, Body
+from pydantic import BaseModel, Field, model_validator
 
 from typing import List, Dict, Any, Optional, Annotated, Literal
 from pprint import pprint
@@ -12,14 +12,80 @@ __all__ = ("router",)
 router = APIRouter(prefix="/category", tags=["tag category", "category"])
 
 
-"""
-66c6a30c9503900ec56fe289 - GAME
-66c6a30c9503900ec56fe28c - FPS
-"""
+class TagCategtroyCreate(BaseModel):
+
+    imageURL: Optional[str] = Field(default=None)
+    name: List[TagName]
+    name_en: str
+
+    description: List[TagDescription]
+    color: str
+
+    @model_validator(mode="before")
+    @classmethod
+    def model_validate(cls, data: dict) -> dict:
+        names = []
+        name_en = None
+        for lang, value in data["name"].items():
+            names.append(TagName(lang=lang, value=value))
+            if lang == "en":
+                name_en = value
+
+        descriptions = []
+
+        if decs := data.get("description"):
+            for lang, value in decs.items():
+                descriptions.append(TagDescription(lang=lang, value=value))
+
+        data["name"] = names
+        data["description"] = descriptions
+        return {**data, "name_en": name_en}
+
+
+class TagCategtroyEdit(TagCategtroyCreate):
+    mergedTo: Optional[str] = Field(default=None)
+    mergedFrom: Optional[List[str]] = Field(default=[])
+    parent: Optional[str] = Field(default=None)
+    children: Optional[List[str]] = Field(default=[])
+
+
+@router.get("")
+async def get_tag_categories(keyword: Annotated[str, Query()]):
+    if not keyword:
+        tag_cat_names = await TagName.find_many(
+            {"value": {"$regex": f"^.*{keyword}.*$", "$options": "i"}},
+        ).to_list()
+        tag_cat_ids = [t.id for t in tag_cat_names]
+        await TagCategory.find()
+        return
+    tag_cat = await TagCategory.all()
+    if not tag_cat:
+        return
+    return await tag_cat.get_parents()
+
+
+@router.post("")
+async def create_tag_category(tagCategory: Annotated[TagCategtroyCreate, Body()]):
+
+    pprint(tagCategory)
+    [await n.create() for n in tagCategory.name]
+    [await d.create() for d in tagCategory.description]
+    await TagCategory(
+        name=tagCategory.name,
+        name_en=tagCategory.name_en,
+        image_url=tagCategory.imageURL,
+        description=tagCategory.description,
+    ).create()
+
+    return
 
 
 @router.get("/{tagCategoryID}")
 async def get_tag_category_by_id(tagCategoryID: Annotated[str, Path()]):
+
+    if tagCategoryID.lower() == "general":
+        tagcat = await TagCategory.get("66ebf118b8307ace8aa9b3bd")
+        return await tagcat.as_json()
 
     tag_cat = await TagCategory.get(tagCategoryID)
     if not tag_cat:
