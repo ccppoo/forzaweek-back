@@ -7,6 +7,7 @@ from app.models.i18n import i18n
 from app.types.http import Url
 from datetime import datetime
 from app.utils.time import datetime_utc
+from app.models.base import DocumentBase
 
 from pydantic import BaseModel
 
@@ -56,15 +57,14 @@ class i18nModelID(BaseModel):
     id: str
 
 
-class TagBase(Document):
+class TagBase(DocumentBase):
 
     # 사용자가 바로 추가하는 태그는 lang : 'unknown'으로
     name: List[Link[TagName]] = Field([])
+    name_en: str
     image_url: Optional[Url] = Field(None)  # 태그 설명하는 작은 이미지
     description: List[Link[TagDescription]] = Field([])  # 태그 설명란
-
-    ## management
-    created_at: datetime = Field(default_factory=datetime_utc)
+    color: Optional[str] = Field(default="#000000")
 
     async def _model_dump_field(self, name: str) -> i18nModelDump:
         _i18nItems = self.__getattribute__(name)
@@ -96,6 +96,7 @@ class TagBase(Document):
             tag_desc: TagDescription
             data["description"][tag_desc.lang] = tag_desc.value
         data["imageURL"] = self.image_url
+        data["color"] = self.color
         return data
 
     class Settings:

@@ -11,6 +11,7 @@ from .base import (
     TagDescription,
     i18nModelDump,
 )
+from app.models.i18n import i18n as I18N
 
 __all__ = ("TagCategory",)
 
@@ -26,6 +27,37 @@ class TagCategory(TagHorizontal, TagVertical, TagBase):
 
     # parent: Optional[Link["TagBase"]] = Field(default=None)  # 상위 개념
     # children: List[Link["TagBase"]] = Field(default=[])
+
+    async def as_json(self):
+
+        if self.name_not_fetched:
+            await self.fetch_link("name")
+        if self.description_not_fetched:
+            await self.fetch_link("description")
+
+        return {
+            "id": self.id_str,
+            "name": self._prepare_names(),
+            "description": self._prepare_description(),
+            "imageURL": self.image_url,
+            "mergedTo": self.merged_to_id,
+            "mergedFrom": self.merged_from_ids,
+            "parent": self.parent_id,
+            "children": self.children_ids,
+        }
+
+    def _prepare_names(self) -> dict:
+        names = {}
+        for _name in self.name:
+            names.update(_name.as_lang_key())
+        return names
+
+    def _prepare_description(self) -> dict:
+        descriptions = {}
+        for _desc in self.description:
+            descriptions.update(_desc.as_lang_key())
+
+        return descriptions
 
     async def dump(self):
         """
@@ -71,6 +103,57 @@ class TagCategory(TagHorizontal, TagVertical, TagBase):
         me_and_parent = await self.get_parents()
 
         return me_and_parent
+
+    @property
+    def name_not_fetched(self) -> bool:
+        for _name in self.name:
+            if isinstance(_name, Link):
+                return True
+        return False
+
+    @property
+    def description_not_fetched(self) -> bool:
+        for _description in self.description:
+            if isinstance(_description, Link):
+                return True
+        return False
+
+    @property
+    def merged_to_id(self) -> str | None:
+        if not self.merged_to:
+            return None
+        if self.merged_to:
+            if isinstance(self.merged_to, Link):
+                return str(self.merged_to.to_ref().id)
+            return self.merged_to.id_str
+
+    @property
+    def merged_from_ids(self) -> List[str]:
+        merged_froms = []
+        for _mfrom in self.merged_from:
+            if isinstance(_mfrom, Link):
+                merged_froms.append(str(_mfrom.to_ref().id))
+            else:
+                merged_froms.append(_mfrom.id_str)
+        return merged_froms
+
+    @property
+    def parent_id(self) -> str | None:
+        if not self.parent:
+            return None
+        if isinstance(self.parent, Link):
+            return str(self.parent.to_ref().id)
+        return self.parent.id_str
+
+    @property
+    def children_ids(self) -> List[str]:
+        children_ids = []
+        for chd in self.children:
+            if isinstance(chd, Link):
+                children_ids.append(str(chd.to_ref().id))
+            else:
+                children_ids.append(chd.id_str)
+        return children_ids
 
     class Settings:
         name: str = "category"

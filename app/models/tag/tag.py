@@ -21,6 +21,7 @@ __all__ = ("TagItem",)
 
 
 class TagItem(TagHorizontal, TagVertical, TagBase):
+    # id
     # name: List[Link[TagName]] = Field([])
     # image_url: Optional[Url] = Field(None)  # 태그 설명하는 작은 이미지
     # description: List[Link[TagDescription]] = Field([])  # 태그 설명란
