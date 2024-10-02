@@ -57,7 +57,7 @@ class ManufacturerEdit(BaseModel):
 
 
 class ManufacturerCreate(BaseModel):
-    origin: str
+    origin: Optional[str]
     i18n: List[ManufacturerName]
     founded: int
     name_en: str

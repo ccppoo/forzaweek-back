@@ -1,4 +1,4 @@
-from fastapi import APIRouter, UploadFile, File, Query, Depends, Path
+from fastapi import APIRouter, UploadFile, File, Query, Depends, Path, Response
 from app.models.manufacturer import Manufacturer as ManufacturerDB
 from app.models.manufacturer import ManufacturerName
 
@@ -9,6 +9,8 @@ from app.models.country.i18n import CountryName
 from pprint import pprint
 from app.models.manufacturer import Manufacturer
 from app.types.http import Url
+from beanie.odm.fields import PydanticObjectId
+
 
 from .create import router as createRouter
 from .temp import router as tempRouter
@@ -19,10 +21,10 @@ router = APIRouter(prefix="/manufacturer", tags=["manufacturer"])
 
 class ManufacturerCreate(BaseModel):
     en: str
-    origin: str  # str -> find in country document -> Link[Country]
-    founded: int
+    origin: Optional[str]  # str -> find in country document -> Link[Country]
+    founded: Optional[int]
     name: List[ManufacturerName]
-    image_url: Url
+    image_url: Optional[Url]
 
 
 class ManufacturerQueryParam(BaseModel):
@@ -30,11 +32,39 @@ class ManufacturerQueryParam(BaseModel):
     country: Optional[str] = Query(None, description="country")
 
 
+class OutputItem(BaseModel):
+    id: PydanticObjectId = Field(None, alias="_id")
+    en: str
+    lowerName: str
+    order: int
+
+
 @router.get("")
 async def get_manufacturer():
-    manu = await ManufacturerDB.get("66d001e9f2d9ae267ee19172")
-
-    return await manu.as_json()
+    mans = await ManufacturerDB.aggregate(
+        [
+            {"$project": {"en": "$en", "lowerName": {"$toLower": "$en"}}},
+            {
+                "$setWindowFields": {
+                    # "partitionBy": "$id",
+                    "sortBy": {"lowerName": 1},
+                    "output": {
+                        "order": {
+                            "$sum": 1,
+                            "window": {"documents": ["unbounded", "current"]},
+                        }
+                    },
+                }
+            },
+        ],
+        projection_model=OutputItem,
+    ).to_list()
+    # mans = await ManufacturerDB.find_all().sort(+ManufacturerDB.en).to_list(10)
+    # manu = await ManufacturerDB.get("66d001e9f2d9ae267ee19172")
+    for man in mans:
+        print(man.id)
+        # print()
+    return mans
 
 
 # @router.get("")
@@ -98,10 +128,12 @@ async def create_country(manufacturer: ManufacturerCreate):
         if exists:
             existing.append(exists)
     if len(existing) > 0:
-        return
-    origin = await Country.find_one(Country.en == manufacturer.origin)
-    if not origin:
-        return
+        return Response(None, status_code=204)
+    origin = None
+    if manufacturer.origin:
+        origin = await Country.find_one(Country.en == manufacturer.origin)
+        if not origin:
+            return
     names = [await n.create() for n in manufacturer.name]
     await Manufacturer(
         name=names,
