@@ -6,7 +6,7 @@ from pydantic import BaseModel, Field
 from beanie import Link
 
 from app.types.http import Url
-from typing import List
+from typing import List, Literal, Union, Mapping
 from .decal import Decal
 from app.models.media import UserMediaUploads
 
@@ -19,8 +19,8 @@ class DecalImages(UserMediaUploads):
 
     images: List[Url] = Field([])
 
-    up_voters: List[str] = Field([])
-    down_voters: List[str] = Field([])
+    up_votes: List[str] = Field([])
+    down_votes: List[str] = Field([])
     favs: List[str] = Field([])
 
     async def as_json(self):
@@ -43,9 +43,9 @@ class DecalImages(UserMediaUploads):
         voted = {"up": [], "down": []}
         faved = False
         if user:
-            if user.user_id in self.up_voters:
+            if user.user_id in self.up_votes:
                 voted["up"].append(user.user_id)
-            if user.user_id in self.down_voters:
+            if user.user_id in self.down_votes:
                 voted["down"].append(user.user_id)
             if user.user_id in self.favs:
                 faved = True
@@ -61,10 +61,27 @@ class DecalImages(UserMediaUploads):
             "lastEdited": self.last_edited,
             "images": self.images,
             "uploader": uploader_uid,
-            "up_votes": len(self.up_voters),
-            "down_votes": len(self.down_voters),
+            "up_votes": len(self.up_votes),
+            "down_votes": len(self.down_votes),
             "voted": voted,
             "faved": faved,
+        }
+
+    async def get_votes(self, user: UserAuth | None = None):
+        # TODO: mongoDB aggretion으로
+        voted = {"up": [], "down": []}
+        if user:
+            if user.user_id in self.up_votes:
+                voted["up"].append(user.user_id)
+            if user.user_id in self.down_votes:
+                voted["down"].append(user.user_id)
+
+        return {
+            "id": self.id_str,
+            "decalBase": self.baseDecalID,
+            "upVotes": len(self.up_votes),
+            "downVotes": len(self.down_votes),
+            "voted": voted,
         }
 
     @property

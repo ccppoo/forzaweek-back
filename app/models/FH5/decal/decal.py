@@ -20,6 +20,7 @@ class Decal(FH5DocumentBase):
     share_code: str = Field(min_length=9, max_length=9)
     gamer_tag: str = Field()
     uploader: Link[UserAuth]  # first uploader of decal
+    name: str
 
     async def as_json(self):
         if self.uploader_link_not_fetched:
@@ -35,6 +36,7 @@ class Decal(FH5DocumentBase):
             "gamerTag": self.gamer_tag,
             "uploader": uploader_uid,
             "baseCar": base_car_id,
+            "name": self.name,
         }
 
     @property

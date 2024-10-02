@@ -49,10 +49,20 @@ class Car_FH5(HasMultipleImages, CarBaseStat, FH5DocumentBase):
         return _car
 
     def indexedDB_Images_sync(self):
-        return {
+        # FIXME: client refuse to receive string starting with https://
+
+        CDN_HOST = "https://fzwcdn.forzaweek.com"
+        aa = {
             "id": self.id_str,
-            "imageURLs": self.image_urls,
+            # "imageURLs": [x.replace(CDN_HOST, "") for x in self.image_urls],
+            # "imageURLs": ["https://fzwcdn.forzaweek.com"],
+            # "imageURLs": [
+            #     "https://fzwcdn.forzaweek.com/static/FH5/car/Mercedes_AMG/Mercedes_AMG_ONE_21.webp"
+            # ],
+            "imageURLs": [str(x) for x in self.image_urls],
         }
+        # print(aa)
+        return aa
 
     @property
     def links_not_fetched(self) -> bool:
