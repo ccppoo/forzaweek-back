@@ -1,7 +1,7 @@
 from .base import ManufacturerBase
 from beanie import Link
 from pydantic import BaseModel, Field
-from typing import List
+from typing import List, Optional
 from .i18n import ManufacturerAlias, ManufacturerName
 from app.models.country import Country
 from app.models.deps.system import HasSingleImage
@@ -21,21 +21,24 @@ class Manufacturer(HasSingleImage, ManufacturerBase):
     alias: List[Link[ManufacturerAlias]] = Field([])
     en: str
 
-    founded: int = Field(ge=1000, le=9999)
-    origin: Link[Country]
+    founded: Optional[int] = Field(ge=1000, le=9999)
+    origin: Optional[Link[Country]]
 
     async def as_json(self, *, origin_as_id: bool = True):
         country = None
-        if origin_as_id and self.names_not_fetched:
-            await self.fetch_names()
-            if isinstance(self.origin, Link):
+        # 출처 국가 없는 경우 None 처리
+        await self.fetch_names()
+        if origin_as_id:
+            if not self.origin:
+                country = None
+            elif isinstance(self.origin, Link):
                 country = str(self.origin.to_ref().id)
             else:
                 country = self.origin.id_str
         if not origin_as_id and self.links_not_fetched:
             await self.fetch_all_links()
             country = await self.origin.as_json()
-
+        print(f"{country=}")
         return {
             "id": self.id_str,
             "name": self._prepare_name(),
@@ -54,7 +57,9 @@ class Manufacturer(HasSingleImage, ManufacturerBase):
         }
         """
         names = {}
+        print(self.en)
         for _name in self.name:
+
             names.update(_name.as_lang_key())
         return names
 
