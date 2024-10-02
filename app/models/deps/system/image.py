@@ -11,10 +11,10 @@ __all__ = (
 
 class HasMultipleImages(BaseModel):
 
-    image_urls: List[Url] = Field(default=[], alias="imageUrls")
+    image_urls: List[Url] = Field(default=[])
     # first_image: Optional[Url] = Field(default=None)
 
 
 class HasSingleImage(BaseModel):
 
-    image_url: Url = Field()
+    image_url: Optional[Url] = Field()
