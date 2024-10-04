@@ -1,12 +1,13 @@
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, Body
 
 
 from app.models.FH5.tuning import Tuning as Tuning_FH5
 from app.models.car import Car as CarDB
 from app.models.tag import TagItem as TagDB
+from app.models.FH5.car import Car_FH5
 
 from pydantic import BaseModel, Field
-from typing import List, Dict, Any, Optional
+from typing import List, Dict, Any, Optional, Annotated
 from app.models.FH5.components.car_details import (
     Performance,
     DetailedTunings,
@@ -14,6 +15,7 @@ from app.models.FH5.components.car_details import (
     TestReadings,
 )
 from pprint import pprint
+from bson import DBRef
 import asyncio
 
 __all__ = ("router",)
@@ -23,7 +25,7 @@ router = APIRouter(prefix="", tags=["tuning"])
 
 class TuningCreate(BaseModel):
 
-    share_code: str = Field(max_length=9, min_length=9)
+    shareCode: str = Field(max_length=9, min_length=9)
     car: str  # car ID
     creator: str
 
@@ -34,6 +36,20 @@ class TuningCreate(BaseModel):
     testReadings: TestReadings  # 필수
     tuningMajorParts: MajorParts  # 필수
     detailedTuning: Optional[DetailedTunings] = Field(default=None)  # 필수 아님
+
+
+class TuningBulkCreate(BaseModel):
+
+    car: str  # car ID
+    name: str  # tuning name
+    shareCode: str = Field(max_length=9, min_length=9)
+    gamerTag: str
+    pi: int  # 필수
+
+    # performance: Performance  # 필수
+    # testReadings: TestReadings  # 필수
+    tuningMajorParts: MajorParts  # 필수
+    # detailedTuning: Optional[DetailedTunings] = Field(default=None)  # 필수 아님
 
 
 class TuningSearchQueryParam(BaseModel):
@@ -60,7 +76,7 @@ async def get_one_tuning(carID: str, tuningID: str):
     if not tuning:
         return 200
 
-    return tuning.to_simple_front()
+    return await tuning.as_json()
 
 
 @router.post("")
@@ -74,18 +90,18 @@ async def create_tuning(tuning: TuningCreate):
         return
 
     # 2. 태그 ID 확인 -> Link로 저장하기 위해서
-    _tags = await asyncio.gather(*[TagDB.get(tagID) for tagID in tuning.tags])
-    tags = [t.to_ref() for t in _tags if t]
+    # _tags = await asyncio.gather(*[TagDB.get(tagID) for tagID in tuning.tags])
+    # tags = [t.to_ref() for t in _tags if t]
 
     # print(f"{tags=}")
     # return
 
     # 4. 저장
     new_tuning = Tuning_FH5(
-        share_code=tuning.share_code,
+        share_code=tuning.shareCode,
         car=car,
         creator=tuning.creator,
-        tags=tags,
+        # tags=tags,
         detailedTuning=tuning.detailedTuning,
         performance=tuning.performance,
         testReadings=tuning.testReadings,
@@ -94,6 +110,42 @@ async def create_tuning(tuning: TuningCreate):
     )
     # pprint(Tuning_FH5)
     await new_tuning.insert()
+
+    return 200
+
+
+@router.post("/bulk")
+async def create_tuning(tunings: Annotated[List[TuningBulkCreate], Body()]):
+    pprint(tunings)
+    # return 200
+    for tuning in tunings:
+
+        # 1. tuning share code check
+        carFH5Ref = DBRef(Tuning_FH5.get_collection_name(), tuning.car)
+        tuningFH5 = await Tuning_FH5.find_one(
+            Tuning_FH5.base_car_fh5 == carFH5Ref,
+            Tuning_FH5.share_code == tuning.shareCode,
+        )
+        if tuningFH5:
+            continue
+        # 2. carFH5 check
+        carFH5 = await Car_FH5.get(tuning.car)
+        if not carFH5:
+            continue
+
+        tuningFH5 = await Tuning_FH5(
+            base_car_fh5=carFH5,
+            gamer_tag=tuning.gamerTag,
+            name=tuning.name,
+            pi=tuning.pi,
+            share_code=tuning.shareCode,
+            tuningMajorParts=tuning.tuningMajorParts,
+            detailedTuning=None,
+            testReadings=None,
+            uploader="test uploader",
+            performance=None,
+        ).create()
+        print(f"tuningFH5 : {tuningFH5.id_str}")
 
     return 200
 

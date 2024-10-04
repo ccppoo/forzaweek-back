@@ -5,11 +5,12 @@ from .performance import Performance
 from .PI import PI
 from .test_readings import TestReadings
 from .tuning import *
+from typing import Optional
 
 
 class StatBase(BaseModel):
     PI: int = Field(ge=100, le=999, alias="pi")
-    performance: Performance
+    performance: Optional[Performance]
 
 
 class CarBaseStat(StatBase):
@@ -19,6 +20,6 @@ class CarBaseStat(StatBase):
 class CarTuningStat(StatBase):
     # PI: int = Field(ge=100, le=999)
     # performance: Performance
-    detailedTuning: DetailedTunings
-    testReadings: TestReadings
+    detailedTuning: Optional[DetailedTunings]
+    testReadings: Optional[TestReadings]
     tuningMajorParts: MajorParts

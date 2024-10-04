@@ -97,6 +97,7 @@ def read_jwt_payload(jwt_to_validate) -> dict | None:
         return decoded
     except Exception as ex:
         # TODO: handle exception
+        print(f"{ex=}")
         # print("The JWT is not valid!")
         return
 

@@ -144,10 +144,19 @@ class XBoxLiveUser:
 
         data["client_id"] = oauthSettings.xbox.CLIENT_ID
         data["client_secret"] = oauthSettings.xbox.CLIENT_SECRET
-
+        headers = {"content-type": "application/x-www-form-urlencoded"}
+        # print()
+        # pprint(f"params로 추가하는거 {data}")
+        # print()
+        # HOST = "https://login.live.com/oauth20_token.srf?"
+        # for k, v in data.items():
+        #     HOST = f"{HOST}{k}={v}&"
+        # print(f"{HOST=}")
         async with aiohttp.ClientSession() as session:
             async with session.post(
-                "https://login.live.com/oauth20_token.srf", data=data
+                "https://login.live.com/oauth20_token.srf",
+                data=data,
+                headers=headers,
             ) as response:
                 _json = await response.json()
                 # pprint(_json)

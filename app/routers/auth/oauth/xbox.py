@@ -62,7 +62,6 @@ async def auth_init():
 @router.post("/refresh")
 async def token_refresh(token: RefreshTokenPayload):
     """return new token"""
-    print(token)
 
     new_token = await _oauth2_token_request(token.refreshToken)
 
